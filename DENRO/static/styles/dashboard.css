@@ -1,0 +1,163 @@
+/* ================================
+   Dashboard Page Styles (CENRO)
+   ================================ */
+
+:root{
+  --main-bg: #19c59f;
+  --color-text: #0a3b30;
+  --color-text-light: #0d5145;
+  --color-accent: #0a3b30;
+  --panel: #d8f7ec;
+  --panel-2: #e8f4ef;
+  --radius: 14px;
+  --left-strip: 240px;
+}
+
+/* Right column (duplicate of global fix for safety/specificity) */
+.layout > .main-section,
+body .main-section{
+  margin-left: var(--left-strip);
+  width: calc(100% - var(--left-strip));
+  min-width: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+/* Clear the fixed topnav; give breathing room */
+.page-content{
+  background: var(--main-bg);
+  padding: 80px 24px 24px; /* ~60px topnav height + spacing */
+}
+
+/* Light rounded "surface" pane like the mock */
+.content-surface{
+  background: #e6fff5;
+  border: 1px solid #cdebe0;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 18px rgba(0,0,0,.10);
+  padding: 22px;
+}
+
+/* =======================
+   Stat tiles
+   ======================= */
+.stat-grid{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  margin-bottom: 22px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.stat-card{
+  position: relative;
+  background: var(--panel);
+  border: 1px solid #cdebe0;
+  border-radius: var(--radius);
+  padding: 16px 14px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+  transition: transform .2s, box-shadow .2s;
+  min-height: 120px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 8px 14px rgba(0,0,0,0.12);
+}
+
+.stat-card h3{
+  margin: 0 0 4px 0;
+  font-size: .95rem;
+  color: var(--color-text);
+  letter-spacing: .02em;
+}
+
+.stat-card .value{
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  margin-bottom: 6px;
+}
+
+/* Optional icon (if used inside the card) */
+.stat-card .stat-icon{
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 1.4rem;
+  opacity: 0.8;
+}
+
+/* =======================
+   Charts
+   ======================= */
+.chart-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+.chart-frame{
+  background: var(--panel-2);
+  border: 1px solid #cdebe0;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+  padding: 20px;
+  min-height: 400px;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.chart-frame h4{
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.chart-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+}
+
+.chart-frame > img,
+.chart-frame > canvas{
+  flex: 1;
+  max-height: 300px;
+  width: 100%;
+  object-fit: contain;
+  display: block;
+  filter: saturate(.95) contrast(.98);
+}
+
+/* =======================
+   Responsive
+   ======================= */
+@media (max-width: 1200px){
+  .stat-grid{ grid-template-columns: repeat(2, 1fr); }
+  .chart-grid{ grid-template-columns: 1fr; }
+}
+@media (max-width: 860px){
+  .layout > .main-section,
+  body .main-section{ margin-left:0; width:100%; }
+}
+@media (max-width: 768px){
+  .stat-grid{ grid-template-columns: 1fr; }
+}

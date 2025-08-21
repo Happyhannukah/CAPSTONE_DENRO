@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}CENRO Activity Logs{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/cenro_excess.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="act panel">
+  <h1 class="act__title">ACTIVITY LOGS</h1>
+
+  <!-- Charts row -->
+  <div class="act__charts">
+    <div class="card">
+      <h2 class="card__title">By Category</h2>
+      <!-- drop in your chart component/canvas here -->
+      <div class="chart ph">Pie Chart Placeholder</div>
+    </div>
+
+    <div class="card">
+      <h2 class="card__title">Product Sales</h2>
+      <!-- drop in your chart component/canvas here -->
+      <div class="chart ph">Bar Chart Placeholder</div>
+    </div>
+  </div>
+
+  <!-- Logs table -->
+  <div class="card">
+    <div class="table-wrap">
+      <table class="table table--logs">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Event</th>
+            <th>Subject</th>
+            <th>User</th>
+            <th>Logged At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td>
+              <span class="badge {% if log.type|lower == 'access' %}badge--access{% else %}badge--resource{% endif %}">
+                {{ log.type }}
+              </span>
+            </td>
+            <td>{{ log.event }}</td>
+            <td>{{ log.subject }}</td>
+            <td>{{ log.user }}</td>
+            <td>{{ log.logged_at }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="empty">No logs yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

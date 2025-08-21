@@ -1,0 +1,88 @@
+/* ====== Side Navigation ====== */
+.sidenav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100%;
+  background: #3FFEBE;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+  z-index: 1000;
+  overflow: hidden; /* prevent its own scroll */
+
+  /* visible divider from main content */
+  border-right: 2px solid rgba(0,0,0,0.2);
+}
+
+.sidenav__header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.sidenav__header .avatar {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto;
+  background: #e6fff5;
+  border-radius: 50%;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sidenav__header .title {
+  margin-top: 0.5rem;
+  font-weight: bold;
+  font-size: 1rem;
+  color: #fff;
+}
+
+/* menu */
+.sidenav__menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+.sidenav__menu li {
+  margin: 0.5rem 0;
+}
+.sidenav__menu a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.5rem 0.8rem;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 0.95rem;
+}
+.sidenav__menu a:hover,
+.sidenav__menu a.active {
+  background: #17a98b;
+}
+.sidenav__menu .nav-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* footer logout */
+.sidenav__footer {
+  padding-top: 1rem;
+  text-align: center;
+}
+.sidenav__footer a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+}
+.sidenav__footer .nav-icon {
+  width: 18px;
+  height: 18px;
+}

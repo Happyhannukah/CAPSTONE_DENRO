@@ -1,0 +1,16 @@
+<!-- templates/includes/sidenav/sidenav_admin.html -->
+<aside class="sidenav">
+  <div class="sidenav__header">
+    <div class="avatar">AD</div>
+    <div class="title">ADMIN</div>
+  </div>
+  <ul class="sidenav__menu">
+    <li><a href="{% url 'Admin-dashboard' %}">Dashboard</a></li>
+    <li><a href="#">Activity Logs</a></li>
+    <li><a href="#">User Accounts</a></li>
+    <li><a href="#">Reports</a></li>
+  </ul>
+  <div class="sidenav__footer">
+    <a href="{% url 'logout' %}">Logout</a>
+  </div>
+</aside>

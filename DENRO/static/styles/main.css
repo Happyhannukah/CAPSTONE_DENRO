@@ -1,0 +1,148 @@
+/* =======================================================
+   DENRO Login – keep mint theme, clean centered design
+   ======================================================= */
+
+/* Theme tokens (match your site) */
+:root{
+  --mint: #19c59f;        /* main mint */
+  --mint-dark: #17a98b;   /* hover/darker mint */
+  --mint-surface: #e6fff5;/* light surface mint */
+  --ink: #0a3b30;         /* primary text */
+  --muted: #3e6b5f;       /* secondary text */
+  --radius: 14px;
+  --shadow-lg: 0 16px 36px rgba(0,0,0,.16);
+  --shadow-sm: 0 6px 14px rgba(0,0,0,.10);
+}
+
+/* Reset / base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Background uses your mint with soft vignette */
+.login-bg{
+  background:
+    radial-gradient(1200px 600px at 80% 10%, rgba(255,255,255,.4), transparent 70%),
+    linear-gradient(180deg, #20d5ac, var(--mint));
+}
+
+/* Centering frame */
+.login-wrap{
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+/* Card */
+.login-card{
+  width: 100%;
+  max-width: 420px;
+  background: var(--mint-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 28px 24px 24px;
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+/* Brand block */
+.login-card__brand{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.brand__logo{
+  width: 48px; height: 48px; object-fit: contain; filter: drop-shadow(0 1px 0 rgba(0,0,0,.05));
+}
+.brand__name{
+  margin:0;
+  letter-spacing: .5px;
+  font-size: 26px;
+  font-weight: 900;
+}
+
+/* Alerts / messages */
+.alert-list{ list-style:none; padding-left:0; margin: 6px 0 8px; }
+.alert{
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  color: #7a5c00;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+/* Form */
+.login-form{ margin-top: 8px; }
+.field{ display:block; margin: 12px 0; }
+.field__label{
+  display:block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.field__input{
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: #eef6ff;                 /* matches your screenshot’s input tint */
+  outline: none;
+  font-size: 15px;
+  transition: box-shadow .15s ease, border-color .15s ease, background .15s;
+}
+.field__input:focus{
+  border-color: var(--mint);
+  box-shadow: 0 0 0 3px rgba(25,197,159,.25);
+  background: #fff;
+}
+
+/* Row with remember + forgot */
+.form-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 8px;
+  margin: 6px 0 12px;
+}
+.check{ display:flex; align-items:center; gap:8px; font-size: 14px; color: var(--muted); }
+.link{ color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px; }
+.link:hover{ text-decoration: underline; }
+
+/* Button centered */
+.btn-wrap{ text-align:center; }
+.btn{
+  appearance:none; border:none; cursor:pointer;
+  font-weight:800; letter-spacing:.2px;
+  border-radius: 999px;
+  padding: 12px 26px;
+  box-shadow: var(--shadow-sm);
+}
+.btn--primary{
+  background: var(--mint);
+  color: #fff;
+}
+.btn--primary:hover{ background: var(--mint-dark); }
+
+/* Footer */
+.login-footer{
+  margin-top: 10px;
+  text-align:center;
+  color: rgba(0,0,0,.7);
+  font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 420px){
+  .brand__name{ font-size: 22px; }
+  .login-card{ padding: 24px 18px 18px; }
+}

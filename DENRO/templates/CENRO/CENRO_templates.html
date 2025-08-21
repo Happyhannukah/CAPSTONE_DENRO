@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Templates — CENRO{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/cenro_excess.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="ctmpl panel">
+  <div class="ctmpl__header">
+    <h1 class="ctmpl__title">TEMPLATES</h1>
+    <a class="ctmpl__add">＋</a>
+  </div>
+
+  <div class="ctmpl__grid">
+    <!-- Enumerator Form card is the trigger -->
+    <a href="#" class="ctmpl__card" id="openModalBtn">
+      <span class="ctmpl__card-title">Enumerators Form</span>
+      <button class="ctmpl__kebab" type="button" aria-label="More">⋮</button>
+    </a>
+  </div>
+</section>
+
+{# 👇 Correct partial path #}
+{% include "CENRO/partials/enumerator_form.html" %}
+
+<!-- External JS -->
+<script src="{% static 'js/scripts.js' %}"></script>
+{% endblock %}

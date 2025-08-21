@@ -1,0 +1,88 @@
+/* =========================
+   Global Theme (site-wide)
+   ========================= */
+:root{
+  /* Color palette (unified across the app) */
+  --main-bg: #95FFDB;
+  --bg: #19c59f;          /* main mint */
+  --bg-2: #25d3ab;        /* lighter mint */
+  --strip: #17b289;       /* darker left strip */
+  --panel: #d8f7ec;       /* pale mint tiles/panels */
+  --panel-2: #e8f4ef;     /* pale grey panels (charts) */
+  --ink: #0a3b30;         /* primary text */
+  --muted: #3e6b5f;       /* secondary text */
+
+  /* Design tokens */
+  --radius: 14px;
+  --shadow: 0 8px 18px rgba(0,0,0,.10);
+
+  /* MUST match .sidenav width */
+  --left-strip: 240px;
+}
+
+/* Global reset */
+html, body {
+  height: 100%;
+  overflow: hidden;              /* lock page scrollbar; right column scrolls */
+  margin: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--ink);
+}
+*, *::before, *::after { box-sizing: inherit; }
+
+/* Background split for sidenav strip */
+body{
+  background: linear-gradient(
+    90deg,
+    var(--strip) 0 var(--left-strip),
+    var(--bg) var(--left-strip)
+  );
+}
+
+/* Panels */
+.panel{
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.panel--chart{ background: var(--panel-2); }
+
+/* Links */
+a{ color: var(--ink); text-decoration: none; }
+a:hover{ text-decoration: underline; }
+
+/* =========================
+   LAYOUT (critical fix)
+   =========================
+   Ensure the right column starts AFTER the sidenav and
+   uses only the remaining width.
+*/
+.layout > .main-section,
+body .main-section{
+  margin-left: var(--left-strip);
+  width: calc(100% - var(--left-strip));
+  min-width: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;                 /* the only scroller */
+}
+
+/* Topnav should line up with the same offset */
+.topnav{
+  left: var(--left-strip);
+  width: calc(100% - var(--left-strip));
+}
+
+/* On small screens (if sidenav overlays), let content span full width */
+@media (max-width: 860px){
+  .layout > .main-section,
+  body .main-section,
+  .topnav{
+    margin-left: 0;
+    left: 0;
+    width: 100%;
+  }
+}

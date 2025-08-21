@@ -1,0 +1,45 @@
+/* ====== Top Navigation ====== */
+.topnav {
+  position: fixed;
+  top: 0;
+  left: var(--left-strip);       /* align with sidenav edge */
+  width: calc(100% - var(--left-strip));
+  height: 60px;
+  background: #d8f7ec;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  z-index: 999;
+}
+
+.topnav__left { display: flex; align-items: center; gap: 1rem; }
+.topnav__brand { font-weight: bold; font-size: 1.1rem; color: #0a3b30; }
+
+.topnav__search {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 20px;
+  padding: 0 10px;
+  width: 280px;
+}
+.topnav__search input {
+  border: none; outline: none; padding: 6px; flex: 1; font-size: 0.9rem; border-radius: 20px;
+}
+.topnav__search button { border: none; background: transparent; cursor: pointer; }
+
+.topnav__right { display: flex; align-items: center; gap: 0.5rem; }
+.topnav__right .link {
+  padding: 5px 10px; border-radius: 6px; text-decoration: none; color: #0a3b30; font-size: 0.85rem; background: #fff;
+}
+.topnav__bell { border: none; background: none; font-size: 1.2rem; cursor: pointer; }
+
+/* Mobile: topnav spans full width */
+@media (max-width: 860px){
+  .topnav{
+    left: 0;
+    width: 100%;
+  }
+}

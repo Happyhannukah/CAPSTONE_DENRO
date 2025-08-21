@@ -1,0 +1,42 @@
+{% load static %}
+<!-- templates/includes/sidenav/sidenav_cenro.html -->
+<aside class="sidenav">
+  <div class="sidenav__header">
+    <div class="avatar">CR</div>
+    <div class="title">CENRO</div>
+  </div>
+
+  <ul class="sidenav__menu">
+    <li>
+      <a href="{% url 'CENRO-dashboard' %}">
+        <img src="{% static 'images/dashboard.png' %}" alt="" class="nav-icon" aria-hidden="true">
+        <span>Dashboard</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'CENRO-activitylogs' %}">
+        <img src="{% static 'images/activitylogs.png' %}" alt="" class="nav-icon" aria-hidden="true">
+        <span>Activity Logs</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'CENRO-reports' %}">
+        <img src="{% static 'images/reports.png' %}" alt="" class="nav-icon" aria-hidden="true">
+        <span>Reports</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'CENRO-templates' %}">
+        <img src="{% static 'images/templates.png' %}" alt="" class="nav-icon" aria-hidden="true">
+        <span>Templates</span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="sidenav__footer">
+    <a href="{% url 'logout' %}">
+      <img src="{% static 'images/logout.png' %}" alt="" class="nav-icon" aria-hidden="true">
+      <span>Logout</span>
+    </a>
+  </div>
+</aside>

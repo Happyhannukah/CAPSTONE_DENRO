@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}CENRO Reports{% endblock %}
+
+{% block extra_css %}
+<style>
+  .reports-container {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #cdebe0;
+  }
+  .reports-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .reports-header h2 {
+    margin: 0;
+  }
+  .filter-buttons a {
+    margin-left: .5rem;
+    padding: .4rem .8rem;
+    text-decoration: none;
+    border-radius: 4px;
+    background: #b9f3dc;
+    color: #000;
+  }
+  .filter-buttons a.active {
+    background: #92e2c3;
+    font-weight: bold;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: .75rem;
+  }
+  th, td {
+    padding: .6rem;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  th {
+    background: #f2fdf8;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+  <div class="reports-header">
+    <h2>📄 Reports</h2>
+    <div class="filter-buttons">
+      <a href="?status=approved" class="{% if request.GET.status == 'approved' %}active{% endif %}">Approved</a>
+      <a href="?status=rejected" class="{% if request.GET.status == 'rejected' %}active{% endif %}">Rejected</a>
+      <a href="?status=pending" class="{% if request.GET.status == 'pending' %}active{% endif %}">Pending</a>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Report Title</th>
+        <th>Status</th>
+        <th>Submitted By</th>
+        <th>Date Submitted</th>
+      </tr>
+    </thead>
+    <tbody>
+      {# Example static rows — replace with your actual queryset loop later #}
+      <tr>
+        <td>1</td>
+        <td>Tree Planting Activity</td>
+        <td>Approved</td>
+        <td>Juan Dela Cruz</td>
+        <td>2025-08-10</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>River Cleanup Drive</td>
+        <td>Pending</td>
+        <td>Maria Santos</td>
+        <td>2025-08-12</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Forest Patrol</td>
+        <td>Rejected</td>
+        <td>Carlos Reyes</td>
+        <td>2025-08-14</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Later you can enhance this with AJAX filtering or pagination
+  console.log("Reports page loaded with status:", "{{ request.GET.status|default:'all' }}");
+</script>
+{% endblock %}
