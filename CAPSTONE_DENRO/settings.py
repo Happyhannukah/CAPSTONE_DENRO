@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'DENRO.apps.DenroConfig'
+    'DENRO.apps.DenroConfig',
+    'rest_framework',
+    # 'DENRO',
 ]
 
 MIDDLEWARE = [
@@ -69,6 +71,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'CAPSTONE_DENRO.wsgi.application'
+# settings.py
+AUTH_USER_MODEL = "DENRO.User"
 
 
 # Database

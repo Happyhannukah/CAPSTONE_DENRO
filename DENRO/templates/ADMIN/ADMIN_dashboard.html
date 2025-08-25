@@ -1,11 +1,321 @@
-{# templates/ADMIN/ADMIN_dashboard.html #}
-{% extends "base.html" %}
-{% block title %}ADMIN Dashboard{% endblock %}
-{% block content %}
-  <div class="stat-grid">
-    <div class="stat-card"><h3>ADMIN</h3><div class="value">800</div></div>
-    <div class="stat-card"><h3>PENRO</h3><div class="value">600</div></div>
-    <div class="stat-card"><h3>CENRO</h3><div class="value">500</div></div>
-    <div class="stat-card"><h3>EVALUATORS</h3><div class="value">2000</div></div>
-  </div>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      /* Sidebar */
+      .sidebar {
+        width: 220px;
+        background: #20c997;
+        color: white;
+        height: 100vh;
+        float: left;
+        padding-top: 20px;
+      }
+      .sidebar h2 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .sidebar a {
+        display: block;
+        padding: 12px 20px;
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        transition: 0.3s;
+      }
+      .sidebar a:hover {
+        background: rgba(255, 255, 255, 0.1);
+        padding-left: 25px;
+      }
+
+      /* Content */
+      .content {
+        margin-left: 220px;
+        padding: 20px;
+        background: #f8f9fa;
+        min-height: 100vh;
+      }
+
+      /* Top bar */
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .topbar h2 {
+        margin: 0;
+        font-size: 18px;  /* smaller para dili bulky */
+        color: #333;
+        font-weight: 600;
+      }
+
+      /* Notification */
+      .notification {
+        position: relative;
+      }
+      .bell-btn {
+        background: none;
+        border: none;
+        font-size: 22px;
+        cursor: pointer;
+        position: relative;
+      }
+      .badge {
+        position: absolute;
+        top: -5px;
+        right: -10px;
+        background: red;
+        color: white;
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 50%;
+      }
+      .notif-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 35px;
+        background: white;
+        border: 1px solid #ccc;
+        width: 280px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        z-index: 1000;
+      }
+      .notif-dropdown h4 {
+        margin: 0;
+        padding: 10px;
+        background: #20c997;
+        color: white;
+        border-radius: 8px 8px 0 0;
+        font-size: 14px;
+      }
+      .notif-dropdown ul {
+        list-style: none;
+        margin: 0;
+        padding: 10px;
+        max-height: 250px;
+        overflow-y: auto;
+      }
+      .notif-dropdown ul li {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+        font-size: 13px;
+      }
+
+      /* Cards */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 20px;
+        margin: 0 auto 30px;
+        max-width: 920px;
+      }
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+      }
+      .card h2 {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 8px;
+      }
+      .card p {
+        font-size: 28px;
+        font-weight: bold;
+        color: #20c997;
+        margin: 0;
+      }
+
+      /* Chart */
+      .chart-container {
+        max-width: 920px;
+        margin: 0 auto 30px;
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        height: 320px;
+      }
+
+      /* Table */
+      .table-wrap {
+        max-width: 920px;
+        margin: 0 auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      th {
+        background: #20c997;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      td {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+      }
+    </style>
+
+<!-- Debug -->
+<pre>{{ stats|safe }}</pre>
+
+
+  </head>
+  <body>
+    <div class="sidebar">
+      <h2>DENRO</h2>
+      <a href="#">Dashboard</a>
+      <a href="#">Activity Logs</a>
+      <a href="#">User Accounts</a>
+      <a href="#">Reports</a>
+      <a href="/logout/">Logout</a>
+    </div>
+
+    <div class="content">
+      <!-- Top bar -->
+      <div class="topbar">
+        <h2>Welcome back, Admin 👋</h2>
+        <div class="notification">
+          <button id="notifBtn" class="bell-btn">
+            🔔 {% if unread_count > 0 %}
+            <span class="badge">{{ unread_count }}</span>
+            {% endif %}
+          </button>
+          <div class="notif-dropdown" id="notifDropdown">
+            <h4>Notifications</h4>
+            <ul>
+              {% for note in notifications %}
+              <li>
+                {{ note.message }} <br />
+                <small>{{ note.created_at|date:"M d, Y H:i" }}</small>
+                <form method="post" action="{% url 'mark_notification_read' note.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="mark-btn">Mark as read</button>
+                </form>
+              </li>
+              {% empty %}
+              <li>No new notifications</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Debug -->
+      <pre>{{ stats|safe }}</pre>
+
+      <!-- Cards -->
+      <div class="cards">
+        <div class="card">
+          <h2>ADMINS</h2>
+          <p>{{ stats.admins|default:0 }}</p>
+        </div>
+        <div class="card">
+          <h2>PENRO</h2>
+          <p>{{ stats.penros|default:0 }}</p>
+        </div>
+        <div class="card">
+          <h2>CENRO</h2>
+          <p>{{ stats.cenros|default:0 }}</p>
+        </div>
+        <div class="card">
+          <h2>EVALUATORS</h2>
+          <p>{{ stats.evaluators|default:0 }}</p>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-container">
+        <canvas id="userChart"></canvas>
+      </div>
+
+      <!-- Users -->
+      <div class="section-title">Recent Users</div>
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Last Login</th>
+          </tr>
+          {% for user in users %}
+          <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td>{{ user.last_login|default:"Never" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4">No users found</td></tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <!-- JS -->
+    <script>
+      // Chart
+      (function () {
+        const ctx = document.getElementById('userChart');
+        if (!ctx) return;
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Admins','PENRO','CENRO','Evaluators'],
+            datasets: [{
+              label: 'Counts',
+              data: [
+                {{ stats.admins|default:0 }},
+                {{ stats.penros|default:0 }},
+                {{ stats.cenros|default:0 }},
+                {{ stats.evaluators|default:0 }}
+              ],
+              backgroundColor: ['#20c997','#0d6efd','#6f42c1','#fd7e14'],
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      })();
+
+      // Notifications
+      document.addEventListener("DOMContentLoaded", function() {
+        const notifBtn = document.getElementById("notifBtn");
+        const notifDropdown = document.getElementById("notifDropdown");
+        notifBtn.addEventListener("click", function(e) {
+          e.stopPropagation();
+          notifDropdown.style.display =
+            notifDropdown.style.display === "block" ? "none" : "block";
+        });
+        document.addEventListener("click", function(event) {
+          if (!notifBtn.contains(event.target) && !notifDropdown.contains(event.target)) {
+            notifDropdown.style.display = "none";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

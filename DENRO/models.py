@@ -1,37 +1,30 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 
-class User(models.Model):
-    class GenderChoices(models.TextChoices):
-        MALE = 'Male'
-        FEMALE = 'Female'
-        OTHER = 'Other'
-
+class User(AbstractUser):
     class RoleChoices(models.TextChoices):
-        SUPER_ADMIN = 'Super Admin'
-        ADMIN = 'Admin'
-        PENRO = 'PENRO'
-        CENRO = 'CENRO'
-        EVALUATOR = 'Evaluator'
+        SUPER_ADMIN = "SUPER_ADMIN", "Super Admin"
+        ADMIN = "ADMIN", "Admin"
+        PENRO = "PENRO", "PENRO"
+        CENRO = "CENRO", "CENRO"
+        EVALUATOR = "EVALUATOR", "Evaluator"
 
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=6, choices=GenderChoices.choices)
-    email = models.EmailField(unique=True)
+    role = models.CharField(
+        max_length=20,
+        choices=RoleChoices.choices,
+        default=RoleChoices.ADMIN
+    )
+    is_approved = models.BooleanField(default=False)
+
+    # Optional profile fields
+    gender = models.CharField(max_length=10, blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
-    region = models.CharField(max_length=100)
-    role = models.CharField(max_length=20, choices=RoleChoices.choices)
-    username = models.CharField(max_length=50, unique=True)
-    password = models.CharField(max_length=255)
+    region = models.CharField(max_length=100, blank=True, null=True)
     profile_pic = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
-        return (
-            f"E-ID: {self.id}, Firstname: {self.first_name}, Lastname: {self.last_name}, "
-            f"Gender: {self.gender}, Cp.no.: {self.phone_number}, Region: {self.region}, "
-            f"Role: {self.role}, Username: {self.username}, Password: ********, "
-            f"Profile: {self.profile_pic}"
-        )
+        return f"{self.username} ({self.role}) - Approved: {self.is_approved}"
 
 
 class GeoTaggedImage(models.Model):
@@ -43,14 +36,23 @@ class GeoTaggedImage(models.Model):
     captured_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='captured_images')
     captured_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Image {self.id} - {self.location}"
+
 
 class EvaluatorsTrackRoute(models.Model):
     pointer = models.ForeignKey(GeoTaggedImage, on_delete=models.CASCADE)
     captured_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"Route by {self.captured_by}"
+
 
 class ProtectedArea(models.Model):
     name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
 
 
 class LeasedPropertyProfile(models.Model):
@@ -70,10 +72,16 @@ class LeasedPropertyProfile(models.Model):
     establishment_status = models.CharField(max_length=100, blank=True, null=True)
     easement = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.proponent_name} - {self.location}"
+
 
 class TypeOfEstablishment(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
 
 
 class PermitsLGU(models.Model):
@@ -91,6 +99,9 @@ class PermitsLGU(models.Model):
     bldg_number = models.IntegerField(blank=True, null=True)
     bldgdi = models.DateField(blank=True, null=True)
     bldged = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Permits LGU #{self.id}"
 
 
 class PermitsDENREMB(models.Model):
@@ -120,6 +131,9 @@ class PermitsDENREMB(models.Model):
 
     emb_rp = models.CharField(max_length=255, blank=True, null=True)
 
+    def __str__(self):
+        return f"DENR EMB Permits #{self.id}"
+
 
 class AttestationNotation(models.Model):
     attested_by_name = models.CharField(max_length=255, blank=True, null=True)
@@ -129,6 +143,9 @@ class AttestationNotation(models.Model):
     noted_by_name = models.CharField(max_length=255, blank=True, null=True)
     noted_by_position = models.CharField(max_length=100, blank=True, null=True)
     noted_by_signature = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"Attestation #{self.id}"
 
 
 class EnumeratorsReport(models.Model):
@@ -143,3 +160,15 @@ class EnumeratorsReport(models.Model):
     informant = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='informant_reports')
     geo_tag_image = models.ForeignKey(GeoTaggedImage, on_delete=models.SET_NULL, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Report {self.id} - {self.report_date}"
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # kinsa nag-register
+    message = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)  # para ma-mark read once nakita
+
+    def __str__(self):
+        return f"Notification for {self.user.username} - {self.message}"
