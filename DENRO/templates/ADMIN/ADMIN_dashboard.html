@@ -1,202 +1,27 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      /* Sidebar */
-      .sidebar {
-        width: 220px;
-        background: #20c997;
-        color: white;
-        height: 100vh;
-        float: left;
-        padding-top: 20px;
-      }
-      .sidebar h2 {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      .sidebar a {
-        display: block;
-        padding: 12px 20px;
-        color: white;
-        text-decoration: none;
-        font-weight: 500;
-        transition: 0.3s;
-      }
-      .sidebar a:hover {
-        background: rgba(255, 255, 255, 0.1);
-        padding-left: 25px;
-      }
-
-      /* Content */
-      .content {
-        margin-left: 220px;
-        padding: 20px;
-        background: #f8f9fa;
-        min-height: 100vh;
-      }
-
-      /* Top bar */
-      .topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-      }
-      .topbar h2 {
-        margin: 0;
-        font-size: 18px;  /* smaller para dili bulky */
-        color: #333;
-        font-weight: 600;
-      }
-
-      /* Notification */
-      .notification {
-        position: relative;
-      }
-      .bell-btn {
-        background: none;
-        border: none;
-        font-size: 22px;
-        cursor: pointer;
-        position: relative;
-      }
-      .badge {
-        position: absolute;
-        top: -5px;
-        right: -10px;
-        background: red;
-        color: white;
-        font-size: 12px;
-        padding: 2px 6px;
-        border-radius: 50%;
-      }
-      .notif-dropdown {
-        display: none;
-        position: absolute;
-        right: 0;
-        top: 35px;
-        background: white;
-        border: 1px solid #ccc;
-        width: 280px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
-        z-index: 1000;
-      }
-      .notif-dropdown h4 {
-        margin: 0;
-        padding: 10px;
-        background: #20c997;
-        color: white;
-        border-radius: 8px 8px 0 0;
-        font-size: 14px;
-      }
-      .notif-dropdown ul {
-        list-style: none;
-        margin: 0;
-        padding: 10px;
-        max-height: 250px;
-        overflow-y: auto;
-      }
-      .notif-dropdown ul li {
-        padding: 8px;
-        border-bottom: 1px solid #eee;
-        font-size: 13px;
-      }
-
-      /* Cards */
-      .cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 20px;
-        margin: 0 auto 30px;
-        max-width: 920px;
-      }
-      .card {
-        background: white;
-        padding: 20px;
-        border-radius: 16px;
-        text-align: center;
-        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-      }
-      .card h2 {
-        font-size: 14px;
-        color: #666;
-        margin-bottom: 8px;
-      }
-      .card p {
-        font-size: 28px;
-        font-weight: bold;
-        color: #20c997;
-        margin: 0;
-      }
-
-      /* Chart */
-      .chart-container {
-        max-width: 920px;
-        margin: 0 auto 30px;
-        background: white;
-        padding: 20px;
-        border-radius: 16px;
-        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-        height: 320px;
-      }
-
-      /* Table */
-      .table-wrap {
-        max-width: 920px;
-        margin: 0 auto;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 8px;
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-      }
-      th {
-        background: #20c997;
-        color: white;
-        padding: 12px;
-        text-align: left;
-        font-weight: 600;
-        font-size: 14px;
-      }
-      td {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-        font-size: 14px;
-      }
-    </style>
-
-<!-- Debug -->
-<pre>{{ stats|safe }}</pre>
-
-
+    <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}" />
   </head>
   <body>
-    <div class="sidebar">
-      <h2>DENRO</h2>
-      <a href="#">Dashboard</a>
-      <a href="#">Activity Logs</a>
-      <a href="#">User Accounts</a>
-      <a href="#">Reports</a>
-      <a href="/logout/">Logout</a>
-    </div>
+    <!-- Sidebar -->
+    {% include 'includes/adminsidebar.html' %}
 
+    <!-- Main Content -->
     <div class="content">
-      <!-- Top bar -->
-      <div class="topbar">
+      <!-- Top Bar -->
+      <div class="top-bar">
         <h2>Welcome back, Admin 👋</h2>
         <div class="notification">
           <button id="notifBtn" class="bell-btn">
             🔔 {% if unread_count > 0 %}
             <span class="badge">{{ unread_count }}</span>
-            {% endif %}
+            {% endif %} 
           </button>
           <div class="notif-dropdown" id="notifDropdown">
             <h4>Notifications</h4>
@@ -205,7 +30,10 @@
               <li>
                 {{ note.message }} <br />
                 <small>{{ note.created_at|date:"M d, Y H:i" }}</small>
-                <form method="post" action="{% url 'mark_notification_read' note.id %}">
+                <form
+                  method="post"
+                  action="{% url 'mark_notification_read' note.id %}"
+                >
                   {% csrf_token %}
                   <button type="submit" class="mark-btn">Mark as read</button>
                 </form>
@@ -217,9 +45,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Debug -->
-      <pre>{{ stats|safe }}</pre>
 
       <!-- Cards -->
       <div class="cards">
@@ -241,12 +66,19 @@
         </div>
       </div>
 
-      <!-- Chart -->
-      <div class="chart-container">
-        <canvas id="userChart"></canvas>
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="chart-container">
+          <h3>User Distribution</h3>
+          <canvas id="userChart" data-admins="{{ stats.admins|default:0 }}" data-penros="{{ stats.penros|default:0 }}" data-cenros="{{ stats.cenros|default:0 }}" data-evaluators="{{ stats.evaluators|default:0 }}"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Account Status</h3>
+          <canvas id="accountStatusChart" data-approved="{{ stats.approved_users|default:0 }}" data-pending="{{ stats.pending_users|default:0 }}" data-rejected="{{ stats.rejected_users|default:0 }}" data-deactivated="{{ stats.deactivated_users|default:0 }}"></canvas>
+        </div>
       </div>
 
-      <!-- Users -->
+      <!-- Recent Users -->
       <div class="section-title">Recent Users</div>
       <div class="table-wrap">
         <table>
@@ -264,58 +96,73 @@
             <td>{{ user.last_login|default:"Never" }}</td>
           </tr>
           {% empty %}
-          <tr><td colspan="4">No users found</td></tr>
+          <tr>
+            <td colspan="4">No users found</td>
+          </tr>
           {% endfor %}
         </table>
+      </div>
+
+      <!-- Activity Logs Section -->
+      <!-- <div class="section-title">Activity Logs</div>
+      <div class="filters">
+        <form method="get" action="{% url 'admin_activitylogs' %}">
+          <input type="text" name="q" placeholder="Search..." value="{{ request.GET.q }}">
+          <select name="role">
+            <option value="">All Roles</option>
+            <option value="ADMIN" {% if request.GET.role == 'ADMIN' %}selected{% endif %}>Admin</option>
+            <option value="PENRO" {% if request.GET.role == 'PENRO' %}selected{% endif %}>PENRO</option>
+            <option value="CENRO" {% if request.GET.role == 'CENRO' %}selected{% endif %}>CENRO</option>
+            <option value="EVALUATOR" {% if request.GET.role == 'EVALUATOR' %}selected{% endif %}>Evaluator</option>
+          </select>
+          <input type="text" name="action" placeholder="Action" value="{{ request.GET.action }}">
+          <input type="date" name="from" value="{{ request.GET.from }}">
+          <input type="date" name="to" value="{{ request.GET.to }}">
+          <button type="submit">Filter</button>
+        </form>
+      </div> -->
+
+      <!-- Activity Logs Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Action</th>
+              <th>Details</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td>{{ log.user.username }}</td>
+              <td>{{ log.action }}</td>
+              <td>{{ log.details }}</td>
+              <td>{{ log.created_at|date:"M d, Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4">No logs found</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+        {% endif %}
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+        {% endif %}
       </div>
     </div>
 
     <!-- JS -->
-    <script>
-      // Chart
-      (function () {
-        const ctx = document.getElementById('userChart');
-        if (!ctx) return;
-        new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: ['Admins','PENRO','CENRO','Evaluators'],
-            datasets: [{
-              label: 'Counts',
-              data: [
-                {{ stats.admins|default:0 }},
-                {{ stats.penros|default:0 }},
-                {{ stats.cenros|default:0 }},
-                {{ stats.evaluators|default:0 }}
-              ],
-              backgroundColor: ['#20c997','#0d6efd','#6f42c1','#fd7e14'],
-              borderRadius: 6
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
-          }
-        });
-      })();
-
-      // Notifications
-      document.addEventListener("DOMContentLoaded", function() {
-        const notifBtn = document.getElementById("notifBtn");
-        const notifDropdown = document.getElementById("notifDropdown");
-        notifBtn.addEventListener("click", function(e) {
-          e.stopPropagation();
-          notifDropdown.style.display =
-            notifDropdown.style.display === "block" ? "none" : "block";
-        });
-        document.addEventListener("click", function(event) {
-          if (!notifBtn.contains(event.target) && !notifDropdown.contains(event.target)) {
-            notifDropdown.style.display = "none";
-          }
-        });
-      });
-    </script>
+    <script src="{% static 'js/admin_dashboard.js' %}"></script>
   </body>
 </html>

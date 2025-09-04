@@ -3,6 +3,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.hashers import check_password, make_password, identify_hasher
 from .models import User
 
+
 def login_user(request):
     if request.method == "POST":
         username = (request.POST.get("username") or "").strip()
@@ -19,7 +20,11 @@ def login_user(request):
                 is_hashed = False
 
             # Validate password (supports hashed + legacy plain text)
-            valid = check_password(password, user.password) if is_hashed else (password == user.password)
+            valid = (
+                check_password(password, user.password)
+                if is_hashed
+                else (password == user.password)
+            )
 
             if valid:
                 # Upgrade legacy plain text to a secure hash
@@ -27,11 +32,11 @@ def login_user(request):
                     user.password = make_password(password)
                     user.save(update_fields=["password"])
 
-                request.session['user_id'] = user.id
-                request.session['username'] = user.username
-                request.session['role'] = (user.role or "").strip().lower()
+                request.session["user_id"] = user.id
+                request.session["username"] = user.username
+                request.session["role"] = (user.role or "").strip().lower()
 
-                role = request.session['role']
+                role = request.session["role"]
                 print(f"✅ Login success: role = '{role}'")
 
                 # Use named URLs for redirects

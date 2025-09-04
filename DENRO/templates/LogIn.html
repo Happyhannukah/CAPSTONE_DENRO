@@ -2,62 +2,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>DENRO — Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="{% static 'styles/main.css' %}">
+    <meta charset="UTF-8">
+    <title>Login - DENRO</title>
+    <link rel="stylesheet" href="{% static 'styles/main.css' %}">
 </head>
-<body class="login-bg">
-  <main class="login-wrap" role="main" aria-label="Login">
-    <section class="login-card" aria-labelledby="login-title">
-      <div class="login-card__brand">
-        <img src="{% static 'images/Logo.png' %}" alt="" class="brand__logo" />
-        <h1 id="login-title" class="brand__name">LOG IN</h1>
-      </div>
+<body>
+    <div class="login-bg">
+        <div class="login-wrap">
+            <div class="login-card">
+                <div class="login-card__brand">
+                    <img src="{% static 'images/Logo.png' %}" alt="DENRO Logo" class="brand__logo">
+                    <h1 class="brand__name">DENRO</h1>
+                </div>
 
-      {% if messages %}
-      <ul class="alert-list" role="status" aria-live="polite">
-        {% for message in messages %}
-        <li class="alert">{{ message }}</li>
-        {% endfor %}
-      </ul>
-      {% endif %}
+                {% if error %}
+                    <ul class="alert-list">
+                        <li class="alert">{{ error }}</li>
+                    </ul>
+                {% endif %}
 
-      <form method="POST" action="{% url 'login' %}" class="login-form" novalidate>
-        {% csrf_token %}
-
-        <label class="field">
-          <span class="field__label">Username</span>
-          <input class="field__input" type="text" name="username" placeholder="Enter username" required>
-        </label>
-
-        <label class="field">
-          <span class="field__label">Password</span>
-          <input class="field__input" type="password" name="password" placeholder="Enter password" required>
-        </label>
-
-        <div class="form-row">
-          <label class="check">
-            <input type="checkbox" name="remember"> <span>Remember me</span>
-          </label>
-          <a href="#" class="link">Forgot Password?</a>
+                <form method="post" class="login-form">
+                    {% csrf_token %}
+                    <div class="field">
+                        <label for="username" class="field__label">Username</label>
+                        <input type="text" id="username" name="username" class="field__input" required>
+                    </div>
+                    <div class="field">
+                        <label for="password" class="field__label">Password</label>
+                        <input type="password" id="password" name="password" class="field__input" required>
+                    </div>
+                    <div class="btn-wrap">
+                        <button type="submit" class="btn btn--primary">Login</button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <div class="link">
-    <p>Don't have an account? 
-        <a href="{% url 'register' %}">Register here</a>
-    </p>
-</div>
-
-        <div class="btn-wrap">
-          <button type="submit" class="btn btn--primary">Log In</button>
-        </div>
-      </form>
-    </section>
-
-    <footer class="login-footer">
-      <small>© {{ now|date:"Y" }} DENRO</small>
-    </footer>
-  </main>
+    </div>
 </body>
 </html>

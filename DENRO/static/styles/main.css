@@ -27,16 +27,20 @@ body{
 
 /* Background uses your mint with soft vignette */
 .login-bg{
-  background:
-    radial-gradient(1200px 600px at 80% 10%, rgba(255,255,255,.4), transparent 70%),
-    linear-gradient(180deg, #20d5ac, var(--mint));
+  background: var(--mint);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Centering frame */
 .login-wrap{
   min-height: 100%;
-  display: grid;
-  place-items: center;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 24px;
 }
 

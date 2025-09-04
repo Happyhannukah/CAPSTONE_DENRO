@@ -1,63 +1,36 @@
 from django.urls import path
-from django.shortcuts import redirect
 from . import views
-# DENR/urls.py
-from django.urls import path, include
-# from rest_framework.routers import DefaultRouter
-# from .views import UserViewSet, records_page
-
-# router = DefaultRouter()
-# router.register("users", UserViewSet, basename="user")
-
-# urlpatterns = [
-#     path("", records_page, name="records_page"),
-#     path("records/", records_page, name="records_page"),
-#     path("api/", include(router.urls)),
-# ]
-
-# urlpatterns = [
-#     path('', lambda request: redirect('login')),
-#     path('login/', views.login_view, name='login'),
-#     path('logout/', views.logout_view, name='logout'),
-
-#     # path('sa/dashboard/', views.superadmin_dashboard, name='SA-dashboard'),
-#     # DENRO/urls.py
-# path("custom-admin/dashboard/", views.admin_dashboard, name="Admin-dashboard"),
+from django.shortcuts import redirect
 
 
-#     path('admin/dashboard/', views.admin_dashboard, name='Admin-dashboard'),
-
-#     path('penro/dashboard/', views.penro_dashboard, name='PENRO-dashboard'),
-
-
-#     path('cenro/dashboard/', views.cenro_dashboard, name='CENRO-dashboard'),
-#     path('cenro/activitylogs/', views.cenro_activitylogs, name='CENRO-activitylogs'),
-#     path('cenro/reports/', views.cenro_reports, name='CENRO-reports'),
-#     path('cenro/templates/', views.cenro_templates, name='CENRO-templates'),
+# redirect root to login
+def root_redirect(request):
+    return redirect("login")
 
 
-# ]
 urlpatterns = [
-    path('', lambda request: redirect('login')),
-    path('login/', views.login_view, name='login'),
-    path('logout/', views.logout_view, name='logout'),
+    path("", root_redirect, name="root"),
+    # Auth
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
     path("register/", views.register_view, name="register"),
-    path("admin/approve-users/", views.approve_users, name="approve-users"),
-    path("admin/notifications/<int:pk>/read/", views.mark_notification_read, name="mark_notification_read"),
-
-
-    # Super Admin
-    path('sa/dashboard/', views.superadmin_dashboard, name='SA-dashboard'),
-
-    # ✅ Custom Admin (avoid conflict with Django's /admin/)
-    path("custom-admin/dashboard/", views.admin_dashboard, name="Admin-dashboard"),
-
-    # PENRO
-    path('penro/dashboard/', views.penro_dashboard, name='PENRO-dashboard'),
-
-    # CENRO
-    path('cenro/dashboard/', views.cenro_dashboard, name='CENRO-dashboard'),
-    path('cenro/activitylogs/', views.cenro_activitylogs, name='CENRO-activitylogs'),
-    path('cenro/reports/', views.cenro_reports, name='CENRO-reports'),
-    path('cenro/templates/', views.cenro_templates, name='CENRO-templates'),
+    # Dashboards
+    path("super-admin/dashboard/", views.superadmin_dashboard, name="SA-dashboard"),
+    path("custom-admin/dashboard/", views.admin_dashboard, name="admin_dashboard"),
+    path("penro/dashboard/", views.penro_dashboard, name="penro_dashboard"),
+    path("cenro/dashboard/", views.cenro_dashboard, name="cenro_dashboard"),
+    # CENRO sub-pages
+    path("cenro/activitylogs/", views.cenro_activitylogs, name="cenro_activitylogs"),
+    path("cenro/reports/", views.cenro_reports, name="cenro_reports"),
+    path("cenro/templates/", views.cenro_templates, name="cenro_templates"),
+    # Admin Approvals
+    path("custom-admin/approve-users/", views.approve_users, name="approve_users"),
+    path("custom-admin/reports/", views.admin_reports, name="admin_reports"),
+    # Notifications
+    path(
+        "notification/<int:pk>/read/",
+        views.mark_notification_read,
+        name="mark_notification_read",
+    ),
+    path("custom-admin/activity-logs/", views.admin_activity_logs, name="admin_activitylogs"),
 ]

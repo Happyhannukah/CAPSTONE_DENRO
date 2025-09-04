@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Reports</title>
+    <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
+    <style>
+        .btn {
+            padding: 8px 16px;
+            margin: 2px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-accept {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-accept:hover {
+            background-color: #218838;
+        }
+
+        .btn-decline {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-decline:hover {
+            background-color: #c82333;
+        }
+
+        .btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        /* Button container styling */
+        td form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    {% include 'includes/adminsidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <h2>Admin Reports</h2>
+        </div>
+
+        <h2>Pending Reports</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Report ID</th>
+                        <th>Report Date</th>
+                        <th>Enumerator</th>
+                        <th>Protected Area</th>
+                        <th>Proponent</th>
+                        <th>Location</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in pending_reports %}
+                    <tr>
+                        <td>{{ report.id }}</td>
+                        <td>{{ report.report_date }}</td>
+                        <td>{{ report.enumerator.username }}</td>
+                        <td>{{ report.pa.name }}</td>
+                        <td>{{ report.profile.proponent_name }}</td>
+                        <td>{{ report.profile.location }}</td>
+                        <td>
+                            <form method="post" action="{% url 'admin_reports' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="report_id" value="{{ report.id }}">
+                                <button type="submit" name="action" value="accept" class="btn btn-accept">Accept</button>
+                                <button type="submit" name="action" value="decline" class="btn btn-decline">Decline</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7">No pending reports</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Accepted Reports</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Report ID</th>
+                        <th>Report Date</th>
+                        <th>Enumerator</th>
+                        <th>Protected Area</th>
+                        <th>Proponent</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in accepted_reports %}
+                    <tr>
+                        <td>{{ report.id }}</td>
+                        <td>{{ report.report_date }}</td>
+                        <td>{{ report.enumerator.username }}</td>
+                        <td>{{ report.pa.name }}</td>
+                        <td>{{ report.profile.proponent_name }}</td>
+                        <td>{{ report.profile.location }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6">No accepted reports</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Declined Reports</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Report ID</th>
+                        <th>Report Date</th>
+                        <th>Enumerator</th>
+                        <th>Protected Area</th>
+                        <th>Proponent</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in declined_reports %}
+                    <tr>
+                        <td>{{ report.id }}</td>
+                        <td>{{ report.report_date }}</td>
+                        <td>{{ report.enumerator.username }}</td>
+                        <td>{{ report.pa.name }}</td>
+                        <td>{{ report.profile.proponent_name }}</td>
+                        <td>{{ report.profile.location }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6">No declined reports</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

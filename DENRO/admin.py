@@ -40,24 +40,68 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User
 
+
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ("username", "email", "role", "is_staff", "is_superuser", "is_approved")  # 👈 added
+    list_display = (
+        "username",
+        "email",
+        "role",
+        "is_staff",
+        "is_superuser",
+        "is_approved",
+    )  # 👈 added
     list_filter = ("role", "is_staff", "is_superuser", "is_approved")  # 👈 added
     search_fields = ("username", "email")
 
     fieldsets = (
         (None, {"fields": ("username", "password")}),
-        ("Personal info", {"fields": ("first_name", "last_name", "email", "gender", "phone_number", "region", "profile_pic")}),
-        ("Permissions", {"fields": ("role", "is_active", "is_staff", "is_superuser", "is_approved", "groups", "user_permissions")}),  # 👈 added is_approved
+        (
+            "Personal info",
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "email",
+                    "gender",
+                    "phone_number",
+                    "region",
+                    "profile_pic",
+                )
+            },
+        ),
+        (
+            "Permissions",
+            {
+                "fields": (
+                    "role",
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "is_approved",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),  # 👈 added is_approved
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
 
     add_fieldsets = (
-        (None, {
-            "classes": ("wide",),
-            "fields": ("username", "email", "password1", "password2", "role", "is_approved"),  # 👈 added is_approved
-        }),
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": (
+                    "username",
+                    "email",
+                    "password1",
+                    "password2",
+                    "role",
+                    "is_approved",
+                ),  # 👈 added is_approved
+            },
+        ),
     )
 
     ordering = ("username",)

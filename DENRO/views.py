@@ -1,31 +1,31 @@
-from django.shortcuts import render, redirect
-from .operation import login_user
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.hashers import make_password
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from .models import User
+from .models import User, Notification, ActivityLog, EnumeratorsReport
+from django.contrib.auth import get_user_model
+User = get_user_model() 
 from .serializers import UserSerializer
 from .permissions import IsSuperAdmin, IsAdminOrSuperAdmin
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import User, EnumeratorsReport   # make sure naa ni sa imong models.py
-from django.contrib.auth import login
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from .models import User
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.decorators import user_passes_test
-from .models import Notification
-from django.shortcuts import get_object_or_404, redirect
+from django.core.paginator import Paginator
+import json
+from django.utils.timezone import now, timedelta
+from django.db.models import Q
 
+
+# ----------------- Notifications -----------------
 @login_required
 def mark_notification_read(request, pk):
     note = get_object_or_404(Notification, pk=pk)
     note.is_read = True
     note.save()
-    return redirect("Admin-dashboard")
+    return redirect("admin-dashboard")
 
+
+# ----------------- Registration -----------------
 def register_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -49,10 +49,8 @@ def register_view(request):
             is_approved=False,  # pending by default
         )
 
-        # 🔔 Create a notification for Admins
         Notification.objects.create(
-            user=user,
-            message=f"New {role} registered: {username}"
+            user=user, message=f"New {role} registered: {username}"
         )
 
         messages.success(request, "Your account is pending approval by Admin.")
@@ -60,9 +58,11 @@ def register_view(request):
 
     return render(request, "Register.html")
 
-# Helper: check if admin
+
+# ----------------- Approve Users -----------------
 def is_admin(user):
     return user.role == "ADMIN" or user.role == "SUPER_ADMIN"
+
 
 @user_passes_test(is_admin)
 def approve_users(request):
@@ -75,195 +75,143 @@ def approve_users(request):
                 user.is_approved = True
                 user.save()
             elif action == "reject":
-                user.delete()
+                user.is_rejected = True
+                user.save()
+            elif action == "deactivate":
+                user.is_deactivated = True
+                user.save()
+            elif action == "reapprove":
+                user.is_rejected = False
+                user.is_approved = True
+                user.save()
+            elif action == "reject_approved":
+                user.is_rejected = True
+                user.is_approved = False
+                user.save()
+            elif action == "deactivate_rejected":
+                user.is_rejected = False
+                user.is_deactivated = True
+                user.save()
         except User.DoesNotExist:
             pass
 
-    # Show all pending users
-    pending_users = User.objects.filter(is_approved=False)
-    return render(request, "ADMIN/approve_users.html", {"pending_users": pending_users})
-
-def register_view(request):
-    if request.method == "POST":
-        username = request.POST.get("username")
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-        role = request.POST.get("role")  # dropdown for roles
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists")
-            return redirect("register")
-
-        user = User.objects.create(
-            username=username,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            role=role,
-            password=make_password(password),  # hash password
-              is_approved=False
-        )
-
-        login(request, user)  # auto-login after register (optional)
-        messages.success(request, "Account created successfully!")
-        return redirect("login")
-
-    return render(request, "Register.html")
-
-# @login_required
-# def admin_dashboard(request):
-#     stats = {
-#         "total_users": User.objects.filter(is_approved=True).count(),
-#         "admins": User.objects.filter(role="ADMIN", is_approved=True).count(),
-#         "penros": User.objects.filter(role="PENRO", is_approved=True).count(),
-#         "cenros": User.objects.filter(role="CENRO", is_approved=True).count(),
-#         "evaluators": User.objects.filter(role="EVALUATOR", is_approved=True).count(),
-#     }
-
-#     users = User.objects.filter(is_approved=True).order_by("-date_joined")[:5]
-
-#     # ✅ Notifications
-#     notifications = Notification.objects.filter(is_read=False).order_by("-created_at")
-#     unread_count = notifications.count()
-#     print("STATS:", stats)
-
-#     # ✅ Only one return (correct template path)
-#     return render(request, "ADMIN/ADMIN_dashboard.html", {
-#         "stats": stats,
-#         "users": users,
-#         "notifications": notifications,
-#         "unread_count": unread_count,
-#     })
-# @login_required
-# def admin_dashboard(request):
-#     stats = {
-#         "total_users": User.objects.filter(is_approved=True).count(),
-#         "admins": User.objects.filter(role=User.RoleChoices.ADMIN, is_approved=True).count(),
-#         "penros": User.objects.filter(role=User.RoleChoices.PENRO, is_approved=True).count(),
-#         "cenros": User.objects.filter(role=User.RoleChoices.CENRO, is_approved=True).count(),
-#         "evaluators": User.objects.filter(role=User.RoleChoices.EVALUATOR, is_approved=True).count(),
-#     }
-
-#     users = User.objects.filter(is_approved=True).order_by("-date_joined")[:5]
-
-#     notifications = Notification.objects.filter(is_read=False).order_by("-created_at")
-#     unread_count = notifications.count()
-
-#     print("STATS:", stats)  # debug
-
-#     return render(request, "ADMIN/ADMIN_dashboard.html", {
-#         "stats": stats,
-#         "users": users,
-#         "notifications": notifications,
-#         "unread_count": unread_count,
-#     })
-
-
-# from django.contrib.auth.decorators import login_required
-# from django.shortcuts import render
-# from .models import User, Notification
-
-# @login_required
-# def admin_dashboard(request):
-#     stats = {
-#         "admins": User.objects.filter(role=User.RoleChoices.ADMIN).count(),
-#         "penros": User.objects.filter(role=User.RoleChoices.PENRO).count(),
-#         "cenros": User.objects.filter(role=User.RoleChoices.CENRO).count(),
-#         "evaluators": User.objects.filter(role=User.RoleChoices.EVALUATOR).count(),
-#     }
-
-#     # Show the 5 most recent users, regardless of approval status
-#     users = User.objects.order_by("-date_joined")[:5]
-
-#     notifications = Notification.objects.filter(is_read=False).order_by("-created_at")
-#     unread_count = notifications.count()
-
-#     return render(request, "ADMIN/ADMIN_dashboard.html", {
-#         "stats": stats,
-#         "users": users,
-#         "notifications": notifications,
-#         "unread_count": unread_count,
-#     })
-
-
-# @login_required
-# def admin_dashboard(request):
-#     stats = {
-#         "admins": User.objects.filter(role=User.RoleChoices.ADMIN).count(),
-#         "penros": User.objects.filter(role=User.RoleChoices.PENRO).count(),
-#         "cenros": User.objects.filter(role=User.RoleChoices.CENRO).count(),
-#         "evaluators": User.objects.filter(role=User.RoleChoices.EVALUATOR).count(),
-#     }
-
-#     # Show the 5 most recent users, regardless of approval status
-#     users = User.objects.order_by("-date_joined")[:5]
-
-#     notifications = Notification.objects.filter(is_read=False).order_by("-created_at")
-#     unread_count = notifications.count()
-
-#     return render(request, "ADMIN/ADMIN_dashboard.html", {
-#         "stats": stats,
-#         "users": users,
-#         "notifications": notifications,
-#         "unread_count": unread_count,
-#     })
-
-# @login_required
-# def admin_dashboard(request):
-#     # DEBUGGING — check user counts directly
-#     print("ALL USERS:", User.objects.all().count())
-#     print("ADMINS:", User.objects.filter(role="ADMIN").count())
-#     print("PENRO:", User.objects.filter(role="PENRO").count())
-#     print("CENRO:", User.objects.filter(role="CENRO").count())
-#     print("EVALUATOR:", User.objects.filter(role="EVALUATOR").count())
-
-#     stats = {
-#         "admins": User.objects.filter(role="ADMIN").count(),
-#         "penros": User.objects.filter(role="PENRO").count(),
-#         "cenros": User.objects.filter(role="CENRO").count(),
-#         "evaluators": User.objects.filter(role="EVALUATOR").count(),
-#     }
-
-#     users = User.objects.order_by("-date_joined")[:5]
-
-#     notifications = Notification.objects.filter(is_read=False).order_by("-created_at")
-#     unread_count = notifications.count()
-
-#     return render(request, "ADMIN/ADMIN_dashboard.html", {
-#         "stats": stats,
-#         "users": users,
-#         "notifications": notifications,
-#         "unread_count": unread_count,
-#     })
-
-@login_required
-def admin_dashboard(request):
-    stats = {
-        "admins": User.objects.filter(role="ADMIN").count(),
-        "penros": User.objects.filter(role="PENRO").count(),
-        "cenros": User.objects.filter(role="CENRO").count(),
-        "evaluators": User.objects.filter(role="EVALUATOR").count(),
-    }
-
-    # Load recent users (optional: keep or remove approval filter)
-    users = User.objects.order_by("-date_joined")[:5]
-
-    # Notifications
-    notifications = Notification.objects.filter(is_read=False).order_by("-created_at")
-    unread_count = notifications.count()
-
-    # Debug (optional)
-    print("STATS:", stats)
-
-    return render(request, "ADMIN/ADMIN_dashboard.html", {
-        "stats": stats,
-        "users": users,
-        "notifications": notifications,
-        "unread_count": unread_count,
+    pending_users = User.objects.filter(is_approved=False, is_rejected=False, is_deactivated=False)
+    approved_users = User.objects.filter(is_approved=True, is_deactivated=False)
+    rejected_users = User.objects.filter(is_rejected=True)
+    deactivated_users = User.objects.filter(is_deactivated=True)
+    return render(request, "ADMIN/approve_users.html", {
+        "pending_users": pending_users,
+        "approved_users": approved_users,
+        "rejected_users": rejected_users,
+        "deactivated_users": deactivated_users
     })
 
+
+# ----------------- Admin Reports -----------------
+@user_passes_test(is_admin)
+def admin_reports(request):
+    if request.method == "POST":
+        report_id = request.POST.get("report_id")
+        action = request.POST.get("action")
+        try:
+            report = EnumeratorsReport.objects.get(id=report_id)
+            if action == "accept":
+                report.status = "ACCEPTED"
+                report.save()
+                ActivityLog.objects.create(
+                    user=request.user,
+                    action='APPROVE',
+                    details=f'Accepted report {report_id} by {report.enumerator.username}',
+                    ip_address=request.META.get("REMOTE_ADDR")
+                )
+            elif action == "decline":
+                report.status = "DECLINED"
+                report.save()
+                ActivityLog.objects.create(
+                    user=request.user,
+                    action='REJECT',
+                    details=f'Declined report {report_id} by {report.enumerator.username}',
+                    ip_address=request.META.get("REMOTE_ADDR")
+                )
+        except EnumeratorsReport.DoesNotExist:
+            pass
+
+    pending_reports = EnumeratorsReport.objects.filter(status="PENDING").select_related('enumerator', 'pa', 'profile')
+    accepted_reports = EnumeratorsReport.objects.filter(status="ACCEPTED").select_related('enumerator', 'pa', 'profile')
+    declined_reports = EnumeratorsReport.objects.filter(status="DECLINED").select_related('enumerator', 'pa', 'profile')
+
+    return render(request, "ADMIN/admin_reports.html", {
+        "pending_reports": pending_reports,
+        "accepted_reports": accepted_reports,
+        "declined_reports": declined_reports
+    })
+
+
+# ----------------- Helper Functions -----------------
+def get_dashboard_stats():
+    return {
+        "admins": User.objects.filter(role="ADMIN", is_approved=True, is_deactivated=False).count(),
+        "penros": User.objects.filter(role="PENRO", is_approved=True, is_deactivated=False).count(),
+        "cenros": User.objects.filter(role="CENRO", is_approved=True, is_deactivated=False).count(),
+        "evaluators": User.objects.filter(role="EVALUATOR", is_approved=True, is_deactivated=False).count(),
+        "approved_users": User.objects.filter(is_approved=True, is_deactivated=False).count(),
+        "pending_users": User.objects.filter(is_approved=False, is_rejected=False, is_deactivated=False).count(),
+        "rejected_users": User.objects.filter(is_rejected=True).count(),
+        "deactivated_users": User.objects.filter(is_deactivated=True).count(),
+    }
+
+
+def get_recent_users(limit=5):
+    return User.objects.order_by("-date_joined")[:limit]
+
+
+def get_unread_notifications():
+    notifications = Notification.objects.filter(is_read=False).order_by("-created_at")
+    return notifications, notifications.count()
+
+
+# ----------------- Admin Dashboard -----------------
+@login_required
+def admin_dashboard(request):
+    stats = get_dashboard_stats()
+    users = get_recent_users()
+    notifications, unread_count = get_unread_notifications()
+
+    # Activity Logs for dashboard
+    logs_qs = ActivityLog.objects.all().select_related("user").order_by("-created_at")[:10]  # Limit to 10 for dashboard
+
+    # Filters
+    q = request.GET.get("q"); role = request.GET.get("role"); action = request.GET.get("action")
+    dfrom = request.GET.get("from"); dto = request.GET.get("to")
+    if q:
+        logs_qs = logs_qs.filter(Q(user__username__icontains=q) | Q(details__icontains=q) | Q(action__icontains=q))
+    if role:
+        logs_qs = logs_qs.filter(user__role=role)
+    if action:
+        logs_qs = logs_qs.filter(action=action)
+    if dfrom:
+        logs_qs = logs_qs.filter(created_at__date__gte=dfrom)
+    if dto:
+        logs_qs = logs_qs.filter(created_at__date__lte=dto)
+
+    paginator = Paginator(logs_qs, 20)
+    page_obj = paginator.get_page(request.GET.get("page") or 1)
+
+    return render(
+        request,
+        "ADMIN/ADMIN_dashboard.html",
+        {
+            "stats": stats,
+            "users": users,
+            "notifications": notifications,
+            "unread_count": unread_count,
+            "logs": page_obj.object_list,
+            "page_obj": page_obj,
+        },
+    )
+
+
+# ----------------- Login -----------------
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -274,15 +222,24 @@ def login_view(request):
             if not user.is_approved:
                 messages.error(request, "Your account is pending approval by Admin.")
                 return redirect("login")
+            if user.is_rejected:
+                messages.error(request, "Your account has been rejected.")
+                return redirect("login")
+            if user.is_deactivated:
+                messages.error(request, "Your account has been deactivated.")
+                return redirect("login")
 
-            
-
-
-            #  Redirect based on role
+            login(request, user)
+            ActivityLog.objects.create(
+                user=user,
+                action='LOGIN',
+                details=f'Logged in from {request.META.get("REMOTE_ADDR", "unknown")}',
+                ip_address=request.META.get("REMOTE_ADDR")
+            )
             if user.role == "SUPER_ADMIN":
                 return redirect("SA-dashboard")
             elif user.role == "ADMIN":
-                return redirect("Admin-dashboard")
+                return redirect("admin_dashboard")
             elif user.role == "PENRO":
                 return redirect("PENRO-dashboard")
             elif user.role == "CENRO":
@@ -290,69 +247,165 @@ def login_view(request):
             elif user.role == "EVALUATOR":
                 return redirect("EVALUATOR-dashboard")
         else:
-            # login failed
-            return render(request, "LogIn.html", {"error": "Invalid username or password"})
+            return render(
+                request, "LogIn.html", {"error": "Invalid username or password"}
+            )
 
     return render(request, "LogIn.html")
 
+@login_required
+def admin_activity_logs(request):
+    # Handle manual account creation POST request
+    if request.method == "POST" and request.POST.get("action") == "create_account":
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        role = request.POST.get("role")
+        first_name = request.POST.get("first_name")
+        last_name = request.POST.get("last_name")
+        id_number = request.POST.get("id_number")
 
-# def login_view(request):
-#     # Always show login page on GET (useful during development)
-#     if request.method == "POST":
-#         response = login_user(request)  # <-- handles auth
-#         if request.user.is_authenticated:
-#             role = request.user.role
-#             if role == "SUPER_ADMIN":
-#                 return redirect("SA-dashboard")
-#             elif role == "ADMIN":
-#                 return redirect("Admin-dashboard")
-#             elif role == "PENRO":
-#                 return redirect("PENRO-dashboard")
-#             elif role == "CENRO":
-#                 return redirect("CENRO-dashboard")
-#             elif role == "EVALUATOR":
-#                 return redirect("EVALUATOR-dashboard")
-#         return response
-#     return render(request, "LogIn.html")
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists")
+        elif User.objects.filter(id_number=id_number).exists():
+            messages.error(request, "ID Number already exists")
+        else:
+            user = User.objects.create(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                role=role,
+                password=make_password(password),
+                id_number=id_number,
+                is_approved=False,  # Pending approval
+            )
 
+            # Create notification for new user registration
+            Notification.objects.create(
+                user=user,
+                message=f"New {role} registered: {username} - Pending approval"
+            )
+
+            ActivityLog.objects.create(
+                user=request.user,
+                action='CREATE',
+                details=f'Created account for {username} ({role}) - ID: {id_number}',
+                ip_address=request.META.get("REMOTE_ADDR")
+            )
+
+            messages.success(request, f"Account for {username} created successfully")
+            return redirect("admin_activitylogs")
+
+    # TODO: replace with real ActivityLog model
+    logs_qs = ActivityLog.objects.all().select_related("user").order_by("-created_at")
+
+    # Filters
+    q = request.GET.get("q"); role = request.GET.get("role"); action = request.GET.get("action")
+    dfrom = request.GET.get("from"); dto = request.GET.get("to")
+    if q:
+        logs_qs = logs_qs.filter(Q(user__username__icontains=q) | Q(details__icontains=q) | Q(action__icontains=q))
+    if role:
+        logs_qs = logs_qs.filter(user__role=role)
+    if action:
+        logs_qs = logs_qs.filter(action=action)
+    if dfrom:
+        logs_qs = logs_qs.filter(created_at__date__gte=dfrom)
+    if dto:
+        logs_qs = logs_qs.filter(created_at__date__lte=dto)
+
+    paginator = Paginator(logs_qs, 20)
+    page_obj = paginator.get_page(request.GET.get("page") or 1)
+
+    # Example metrics (adjust as needed)
+    metrics = {
+        "total_events": logs_qs.count(),
+        "unique_users": logs_qs.values("user_id").distinct().count(),
+        "errors": logs_qs.filter(action="ERROR").count(),
+        "this_week": logs_qs.filter(created_at__gte=now()-timedelta(days=7)).count(),
+    }
+
+    from django.db.models import Count
+
+    # Detailed breakdowns for popups
+    total_events_breakdown = dict(logs_qs.values_list("action").annotate(c=Count("id")))
+    unique_user_ids = logs_qs.values("user_id").distinct()
+    unique_users_breakdown = dict(
+        logs_qs.filter(user_id__in=[u["user_id"] for u in unique_user_ids])
+        .values_list("action")
+        .annotate(c=Count("id"))
+    )
+    errors_breakdown = dict(
+        logs_qs.filter(action="ERROR").values_list("details").annotate(c=Count("id"))
+    )
+    this_week_qs = logs_qs.filter(created_at__gte=now() - timedelta(days=7))
+    this_week_breakdown = dict(this_week_qs.values_list("action").annotate(c=Count("id")))
+
+    context = {
+        "logs": page_obj.object_list,
+        "page_obj": page_obj,
+        "metrics": metrics,
+        "action_counts_json": json.dumps(total_events_breakdown),
+        "popup_data": {
+            "total_events": total_events_breakdown,
+            "unique_users": unique_users_breakdown,
+            "errors": errors_breakdown,
+            "this_week": this_week_breakdown,
+        },
+    }
+    return render(request, "ADMIN/admin_activitylogs.html", context)
+
+
+# ----------------- Dashboards -----------------
 @login_required
 def superadmin_dashboard(request):
     users = User.objects.all()
     return render(request, "SUPER_ADMIN/SA_dashboard.html", {"users": users})
 
 
-def admin_dashboard(request):
-    return render(request, 'ADMIN/ADMIN_dashboard.html')
-
+@login_required
 def penro_dashboard(request):
-    return render(request, 'PENRO/PENRO_dashboard.html')
+    return render(request, "PENRO/PENRO_dashboard.html")
 
+
+@login_required
 def cenro_dashboard(request):
-    return render(request, 'CENRO/CENRO_dashboard.html')
+    return render(request, "CENRO/CENRO_dashboard.html")
 
+
+@login_required
 def cenro_activitylogs(request):
-    return render(request, 'CENRO/CENRO_activitylogs.html')
+    return render(request, "CENRO/cenro_activitylogs.html")
 
+
+@login_required
 def cenro_reports(request):
-    return render (request, 'CENRO/CENRO_reports.html')
+    return render(request, "CENRO/cenro_reports.html")
 
+
+@login_required
 def cenro_templates(request):
-    return render (request, 'CENRO/CENRO_templates.html')
+    return render(request, "CENRO/CENRO_templates.html")
 
+
+# ----------------- Logout -----------------
 def logout_view(request):
     request.session.flush()
     return redirect("login")
 
-# def records_page(request):
-#     records = Denr.objects.all()
-#     return render(request, "ADMIN.html", {"records": records})
 
+# ----------------- API -----------------
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated & IsAdminOrSuperAdmin]
 
     def get_permissions(self):
-        if self.action in ["create", "destroy"]:  # only super admin
+        if self.action in ["create", "destroy"]:
             return [IsSuperAdmin()]
         return super().get_permissions()
+
+
+
+
+        
