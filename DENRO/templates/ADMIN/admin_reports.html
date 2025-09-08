@@ -65,6 +65,30 @@
         <!-- Top Bar -->
         <div class="top-bar">
             <h2>Admin Reports</h2>
+            <div class="notification">
+                <button id="notifBtn" class="bell-btn">
+                    🔔 {% if unread_count > 0 %}
+                    <span class="badge">{{ unread_count }}</span>
+                    {% endif %}
+                </button>
+                <div class="notif-dropdown" id="notifDropdown">
+                    <h4>Notifications</h4>
+                    <ul>
+                        {% for note in notifications %}
+                        <li>
+                            {{ note.message }} <br />
+                            <small>{{ note.created_at|date:"M d, Y H:i" }}</small>
+                            <form method="post" action="{% url 'mark_notification_read' note.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="mark-btn">Mark as read</button>
+                            </form>
+                        </li>
+                        {% empty %}
+                        <li>No new notifications</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
 
         <h2>Pending Reports</h2>

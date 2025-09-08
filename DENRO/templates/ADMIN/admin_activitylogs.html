@@ -4,9 +4,155 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Activity Logs</title>
-    <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}">
+    <!-- Updated CSS path to match the imported dashboard.css -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
+    <!-- Added notification bell CSS styling -->
+    <style>
+        .notification {
+            position: relative;
+            display: inline-block;
+        }
+
+        .bell-btn {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            position: relative;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .bell-btn:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .badge {
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .notif-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: white;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-top: 5px;
+        }
+
+        .notif-dropdown.show {
+            display: block;
+        }
+
+        .notif-dropdown h4 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .notif-dropdown ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .notif-dropdown li {
+            margin-bottom: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+
+        .notif-dropdown li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .mark-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .mark-btn:hover {
+            background-color: #0056b3;
+        }
+
+        @media (max-width: 768px) {
+            .notif-dropdown {
+                width: 280px;
+                right: -50px;
+            }
+        }
+
+        /* Modal Styles for Popup */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar -->
@@ -17,6 +163,31 @@
         <!-- Top Bar -->
         <div class="top-bar">
             <h2>Activity Logs</h2>
+            <!-- Added notification bell icon with same functionality as dashboard -->
+            <div class="notification">
+                <button id="notifBtn" class="bell-btn">
+                    🔔 {% if unread_count > 0 %}
+                    <span class="badge">{{ unread_count }}</span>
+                    {% endif %}
+                </button>
+                <div class="notif-dropdown" id="notifDropdown">
+                    <h4>Notifications</h4>
+                    <ul>
+                        {% for note in notifications %}
+                        <li>
+                            {{ note.message }} <br />
+                            <small>{{ note.created_at|date:"M d, Y H:i" }}</small>
+                            <form method="post" action="{% url 'mark_notification_read' note.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="mark-btn">Mark as read</button>
+                            </form>
+                        </li>
+                        {% empty %}
+                        <li>No new notifications</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
 
         <!-- Filters -->
@@ -32,29 +203,17 @@
                 </select>
                 <input type="text" name="action" placeholder="Action" value="{{ request.GET.action }}">
                 <input type="date" name="from" value="{{ request.GET.from }}">
-                <input type="date" name="to" value="{{ request.GET.to }}">
+                {% comment %} <input type="date" name="to" value="{{ request.GET.to }}"> {% endcomment %}
                 <button type="submit">Filter</button>
             </form>
         </div>
 
         <!-- Metrics -->
         <div class="cards">
-            <div class="card">
-                <h3>Total Events</h3>
-                <p>{{ metrics.total_events }}</p>
-            </div>
-            <div class="card">
-                <h3>Unique Users</h3>
-                <p>{{ metrics.unique_users }}</p>
-            </div>
-            <div class="card">
-                <h3>Errors</h3>
-                <p>{{ metrics.errors }}</p>
-            </div>
-            <div class="card">
-                <h3>This Week</h3>
-                <p>{{ metrics.this_week }}</p>
-            </div>
+            <div class="card"><h3>Total Events</h3><p>{{ metrics.total_events }}</p></div>
+            <div class="card"><h3>Unique Users</h3><p>{{ metrics.unique_users }}</p></div>
+            <div class="card"><h3>Errors</h3><p>{{ metrics.errors }}</p></div>
+            <div class="card"><h3>This Week</h3><p>{{ metrics.this_week }}</p></div>
         </div>
 
         <!-- Manual Account Creation -->
@@ -67,43 +226,37 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="create_account">
 
-                <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="first_name" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">First Name:</label>
-                        <input type="text" id="first_name" name="first_name" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem;">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="last_name" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Last Name:</label>
-                        <input type="text" id="last_name" name="last_name" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem;">
-                    </div>
-                </div>
-
-                <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                    <div class="form-group" style="flex: 1;">
+                <!-- Added complete form fields for account creation -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
                         <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username:</label>
-                        <input type="text" id="username" name="username" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem;">
+                        <input type="text" id="username" name="username" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
                     </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="id_number" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">ID Number:</label>
-                        <input type="text" id="id_number" name="id_number" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem;">
-                    </div>
-                </div>
-
-                <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                    <div class="form-group" style="flex: 1;">
+                    <div>
                         <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email:</label>
-                        <input type="email" id="email" name="email" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem;">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password:</label>
-                        <input type="password" id="password" name="password" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem;">
+                        <input type="email" id="email" name="email" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
                     </div>
                 </div>
 
-                <div class="form-row" style="margin-bottom: 1.5rem;">
-                    <div class="form-group" style="flex: 1;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label for="first_name" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">First Name:</label>
+                        <input type="text" id="first_name" name="first_name" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
+                    </div>
+                    <div>
+                        <label for="last_name" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Last Name:</label>
+                        <input type="text" id="last_name" name="last_name" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password:</label>
+                        <input type="password" id="password" name="password" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
+                    </div>
+                    <div>
                         <label for="role" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Role:</label>
-                        <select id="role" name="role" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem;">
+                        <select id="role" name="role" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
                             <option value="">Select Role</option>
                             <option value="ADMIN">Admin</option>
                             <option value="PENRO">PENRO</option>
@@ -113,24 +266,72 @@
                     </div>
                 </div>
 
-                <div class="form-actions" style="display: flex; gap: 1rem;">
-                    <button type="submit" class="btn btn-success" style="background: #28a745; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-size: 1rem;">
-                        <i class="fas fa-check" style="margin-right: 0.5rem;"></i>Create Account
-                    </button>
-                    <button type="button" id="cancelCreate" class="btn btn-secondary" style="background: #6c757d; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-size: 1rem;">
-                        <i class="fas fa-times" style="margin-right: 0.5rem;"></i>Cancel
-                    </button>
+                <!-- Added missing ID number field that backend expects -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label for="id_number" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">ID Number:</label>
+                        <input type="text" id="id_number" name="id_number" required style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
+                    </div>
+                    <div>
+                        <label for="phone" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Phone Number:</label>
+                        <input type="tel" id="phone" name="phone" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" id="cancelCreate" style="background: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    <button type="submit" style="background: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Create Account</button>
                 </div>
             </form>
         </div>
 
-        <!-- Chart -->
-        <div class="chart-container">
-            <h3>Action Distribution</h3>
-            <canvas id="actionChart"></canvas>
+        <!-- User Details Modal -->
+        <div id="userModal" class="modal" style="display:none;">
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>User Recent Actions</h3>
+            <div id="userDetailsContent">
+              <!-- JS will inject logs here -->
+            </div>
+          </div>
         </div>
 
-
+        <!-- Activity Logs Table -->
+        <div class="section-title">Activity Logs</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Details</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>
+                            <a href="#" class="user-link" data-user-id="{{ log.user.id }}">
+                                {{ log.user.username }}
+                            </a>
+                        </td>
+                        <td>{{ log.action }}</td>
+                        <td>{{ log.details }}</td>
+                        <td>{{ log.latitude }}</td>
+                        <td>{{ log.longitude }}</td>
+                        <td>{{ log.created_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">No logs found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
         <!-- Pagination -->
         <div class="pagination">
@@ -161,35 +362,70 @@
             const form = document.getElementById('createAccountForm');
             form.style.display = 'none';
             document.getElementById('toggleCreateForm').innerHTML = '<i class="fas fa-plus" style="margin-right: 0.5rem;"></i>Create Account';
-            // Reset form
             form.reset();
         });
-
-        // Action Distribution Chart
-        const ctx = document.getElementById('actionChart').getContext('2d');
-        const actionCounts = JSON.parse('{{ action_counts_json|safe }}');
-        const labels = Object.keys(actionCounts);
-        const data = Object.values(actionCounts);
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Actions',
-                    data: data,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
     </script>
+
+    <!-- Modal Script -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const modal = document.getElementById("userModal");
+      const closeBtn = modal.querySelector(".close");
+      const detailsContainer = document.getElementById("userDetailsContent");
+
+      document.querySelectorAll(".user-link").forEach(link => {
+        link.addEventListener("click", function(e) {
+          e.preventDefault();
+          const userId = this.dataset.userId;
+          const url = `/activitylogs/user/${userId}/`;
+
+          fetch(url, {
+            headers: {'Accept': 'application/json'}
+          })
+          .then(res => res.json())
+          .then(data => {
+            const table = document.createElement('table');
+            table.innerHTML = `
+              <thead>
+                <tr>
+                  <th>Action</th>
+                  <th>Details</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.logs.map(log => `
+                  <tr>
+                    <td>${log.action}</td>
+                    <td>${log.details}</td>
+                    <td>${log.created_at}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            `;
+            detailsContainer.innerHTML = '';
+            detailsContainer.appendChild(table);
+            modal.style.display = "block";
+          })
+          .catch(error => {
+            console.error('Error fetching user details:', error);
+            detailsContainer.innerHTML = '<p>Error loading user details.</p>';
+            modal.style.display = "block";
+          });
+        });
+      });
+
+      closeBtn.onclick = function() {
+        modal.style.display = "none";
+      }
+      window.onclick = function(event) {
+        if (event.target == modal) modal.style.display = "none";
+      }
+    });
+    </script>
+
+    <!-- Added JavaScript for notification functionality -->
+    <!-- Updated JS path to match the imported admin_dashboard.js -->
+    <script src="{% static 'js/admin_dashboard.js' %}"></script>
 </body>
 </html>

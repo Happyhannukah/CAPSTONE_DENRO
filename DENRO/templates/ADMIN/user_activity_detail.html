@@ -1,0 +1,152 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="content">
+  <h2>Activity Logs</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Action</th>
+        <th>Details</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>
+          <!-- Username becomes a modal trigger -->
+          <a href="#" class="user-link" data-user-id="{{ log.user.id }}">
+            {{ log.user.username }}
+          </a>
+        </td>
+        <td>{{ log.action }}</td>
+        <td>{{ log.details }}</td>
+        <td>{{ log.created_at|date:"M d, Y H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4">No activity logs found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ================= Modal ================= -->
+<div
+  id="userModal"
+  class="modal"
+  style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+  "
+>
+  <div
+    class="modal-content"
+    style="
+      background: #fff;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 70%;
+      position: relative;
+    "
+  >
+    <span
+      class="close"
+      style="
+        position: absolute;
+        right: 15px;
+        top: 10px;
+        font-size: 24px;
+        cursor: pointer;
+      "
+      >&times;</span
+    >
+    <h2>User Recent Actions</h2>
+    <div id="modalBody">
+      <!-- User logs will load here -->
+    </div>
+  </div>
+</div>
+
+<!-- ================= Script ================= -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("userModal");
+    const modalBody = document.getElementById("modalBody");
+    const closeBtn = modal.querySelector(".close");
+
+    // Attach click events to each username
+    document.querySelectorAll(".user-link").forEach((link) => {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const userId = this.dataset.userId;
+
+        // Fetch user logs from your detail view
+        fetch(`/activitylogs/user/${userId}/`, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // Build table HTML from JSON data
+            let html = `<h3>Recent Actions for ${data.user}</h3>`;
+            if (data.logs && data.logs.length > 0) {
+              html += `
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Action</th>
+                      <th>Details</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+              `;
+              data.logs.forEach(log => {
+                html += `
+                  <tr>
+                    <td>${log.action}</td>
+                    <td>${log.details}</td>
+                    <td>${new Date(log.created_at).toLocaleString()}</td>
+                  </tr>
+                `;
+              });
+              html += `
+                  </tbody>
+                </table>
+              `;
+            } else {
+              html += '<p>No recent actions found.</p>';
+            }
+            modalBody.innerHTML = html;
+            modal.style.display = "block";
+          })
+          .catch((err) => {
+            modalBody.innerHTML = "<p>Error loading logs.</p>";
+            modal.style.display = "block";
+          });
+      });
+    });
+
+    // Close modal when X is clicked
+    closeBtn.addEventListener("click", () => (modal.style.display = "none"));
+
+    // Close modal when clicking outside
+    window.addEventListener("click", (e) => {
+      if (e.target == modal) modal.style.display = "none";
+    });
+  });
+</script>
+
+{% endblock %}
