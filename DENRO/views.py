@@ -177,6 +177,8 @@ def admin_reports(request):
         "enumerator", "pa", "profile"
     )
 
+    notifications, unread_count = get_unread_notifications()
+
     return render(
         request,
         "ADMIN/admin_reports.html",
@@ -184,6 +186,8 @@ def admin_reports(request):
             "pending_reports": pending_reports,
             "accepted_reports": accepted_reports,
             "declined_reports": declined_reports,
+            "notifications": notifications,
+            "unread_count": unread_count,
         },
     )
 

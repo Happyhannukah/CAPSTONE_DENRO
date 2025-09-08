@@ -213,6 +213,18 @@
   border-bottom: 1px solid #eee;
   font-size: 13px;
 }
+.mark-btn {
+  background: #20c997;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.mark-btn:hover {
+  background: #17a98b;
+}
 
 /* Cards */
 .cards {
