@@ -70,7 +70,7 @@
       <div class="charts-row">
         <div class="chart-container">
           <h3>Report Status Overview</h3>
-          <canvas id="userChart" data-admins="{{ stats.admins|default:0 }}" data-penros="{{ stats.penros|default:0 }}" data-cenros="{{ stats.cenros|default:0 }}" data-evaluators="{{ stats.evaluators|default:0 }}"></canvas>
+          <canvas id="reportStatusChart" data-pending="{{ stats.pending_reports|default:0 }}" data-accepted="{{ stats.accepted_reports|default:0 }}" data-declined="{{ stats.declined_reports|default:0 }}"></canvas>
         </div>
         <div class="chart-container">
           <h3>Account Status</h3>

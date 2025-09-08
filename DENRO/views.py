@@ -1,9 +1,11 @@
 # DENRO/views.py
-from datetime import timedelta
+from datetime import timedelta, datetime
 import json
 import logging
+import random
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
@@ -203,6 +205,9 @@ def get_dashboard_stats():
         "pending_users": User.objects.filter(is_approved=False, is_rejected=False, is_deactivated=False).count(),
         "rejected_users": User.objects.filter(is_rejected=True).count(),
         "deactivated_users": User.objects.filter(is_deactivated=True).count(),
+        "pending_reports": EnumeratorsReport.objects.filter(status="PENDING").count(),
+        "accepted_reports": EnumeratorsReport.objects.filter(status="ACCEPTED").count(),
+        "declined_reports": EnumeratorsReport.objects.filter(status="DECLINED").count(),
     }
 
 
@@ -279,6 +284,42 @@ def login_view(request):
                 messages.error(request, "Your account has been deactivated.")
                 return redirect("login")
 
+            # Generate 2FA code
+            code = str(random.randint(100000, 999999))
+            request.session['2fa_code'] = code
+            request.session['2fa_user_id'] = user.id
+            request.session['2fa_expires'] = (datetime.now() + timedelta(minutes=5)).timestamp()
+
+            # Send email
+            send_mail(
+                'Your 2FA Code for DENRO',
+                f'Your verification code is: {code}\n\nThis code will expire in 5 minutes.',
+                'DENRO <zeycaramales@gmail.com>',
+                [user.email],
+                fail_silently=False,
+            )
+
+            return redirect('verify_2fa')
+        else:
+            return render(request, "LogIn.html", {"error": "Invalid username or password"})
+
+    return render(request, "LogIn.html")
+
+
+# ----------------- Verify 2FA -----------------
+def verify_2fa(request):
+    if request.method == "POST":
+        code = request.POST.get("code")
+        stored_code = request.session.get('2fa_code')
+        user_id = request.session.get('2fa_user_id')
+        expires = request.session.get('2fa_expires')
+
+        if expires and datetime.now().timestamp() > expires:
+            messages.error(request, "Verification code has expired. Please login again.")
+            return redirect("login")
+
+        if code == stored_code and user_id:
+            user = User.objects.get(id=user_id)
             login(request, user)
             ActivityLog.objects.create(
                 user=user,
@@ -286,6 +327,12 @@ def login_view(request):
                 details=f"Logged in from {request.META.get('REMOTE_ADDR', 'unknown')}",
                 ip_address=request.META.get("REMOTE_ADDR"),
             )
+            # Clear session
+            del request.session['2fa_code']
+            del request.session['2fa_user_id']
+            del request.session['2fa_expires']
+
+            # Redirect based on role
             if user.role == "SUPER_ADMIN":
                 return redirect("SA-dashboard")
             elif user.role == "ADMIN":
@@ -297,9 +344,10 @@ def login_view(request):
             elif user.role == "EVALUATOR":
                 return redirect("EVALUATOR-dashboard")
         else:
-            return render(request, "LogIn.html", {"error": "Invalid username or password"})
+            messages.error(request, "Invalid verification code.")
+            return redirect("login")
 
-    return render(request, "LogIn.html")
+    return render(request, "verify_2fa.html")
 
 
 # ----------------- User Profile -----------------

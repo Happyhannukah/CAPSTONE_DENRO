@@ -1,10 +1,9 @@
-# TODO: Add Notification Bell to Approve Users Page
+# TODO: Implement 2FA with Gmail after login
 
-## Tasks
-- [x] Read current approve_users.html structure
-- [x] Read admin_activitylogs.html to extract notification HTML and CSS
-- [x] Read admin_dashboard.js for notification JavaScript
-- [ ] Update approve_users.html with notification bell HTML structure
-- [ ] Add notification CSS styles to approve_users.html
-- [ ] Include admin_dashboard.js script in approve_users.html
-- [ ] Test notification functionality
+## Steps:
+- [x] Update CAPSTONE_DENRO/settings.py: Add Gmail SMTP configuration
+- [x] Modify DENRO/views.py: Update login_view to send 2FA code via email and redirect to verify page
+- [x] Add verify_2fa view in DENRO/views.py
+- [x] Update DENRO/urls.py: Add URL for verify_2fa
+- [x] Create DENRO/templates/verify_2fa.html: Template for entering 2FA code
+- [x] Test the implementation (Run the server and try logging in with a user who has an email)

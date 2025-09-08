@@ -1,20 +1,19 @@
 document.addEventListener("DOMContentLoaded", function() {
-  // User Distribution Chart
-  const userChartCtx = document.getElementById('userChart');
-  if (userChartCtx) {
-    new Chart(userChartCtx, {
+  // Report Status Overview Chart
+  const reportStatusCtx = document.getElementById('reportStatusChart');
+  if (reportStatusCtx) {
+    new Chart(reportStatusCtx, {
       type: 'bar',
       data: {
-        labels: ['Admins', 'PENRO', 'CENRO', 'Evaluators'],
+        labels: ['Pending', 'Accepted', 'Declined'],
         datasets: [{
-          label: 'Counts',
+          label: 'Report Counts',
           data: [
-            parseInt(userChartCtx.dataset.admins) || 0,
-            parseInt(userChartCtx.dataset.penros) || 0,
-            parseInt(userChartCtx.dataset.cenros) || 0,
-            parseInt(userChartCtx.dataset.evaluators) || 0
+            parseInt(reportStatusCtx.dataset.pending) || 0,
+            parseInt(reportStatusCtx.dataset.accepted) || 0,
+            parseInt(reportStatusCtx.dataset.declined) || 0
           ],
-          backgroundColor: ['#20c997', '#0d6efd', '#6f42c1', '#fd7e14'],
+          backgroundColor: ['#ffc107', '#20c997', '#dc3545'],
           borderRadius: 6
         }]
       },
@@ -25,7 +24,10 @@ document.addEventListener("DOMContentLoaded", function() {
           legend: { position: 'bottom' },
           title: { display: false }
         },
-        scales: { y: { beginAtZero: true } }
+        scales: {
+          x: { stacked: true },
+          y: { beginAtZero: true, stacked: true }
+        }
       }
     });
   }
