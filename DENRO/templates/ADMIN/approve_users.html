@@ -204,6 +204,37 @@
             </div>
         </div>
 
+        <!-- Filters -->
+        <div class="filters" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 2rem;">
+            <form method="get" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; flex-direction: column;">
+                    <label for="q" style="font-weight: 500; margin-bottom: 0.5rem;">Search:</label>
+                    <input type="text" id="q" name="q" placeholder="Username, Email, Name..." value="{{ request.GET.q }}" style="padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; min-width: 200px;">
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <label for="role" style="font-weight: 500; margin-bottom: 0.5rem;">Role:</label>
+                    <select id="role" name="role" style="padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
+                        <option value="">All Roles</option>
+                        <option value="ADMIN" {% if request.GET.role == 'ADMIN' %}selected{% endif %}>Admin</option>
+                        <option value="PENRO" {% if request.GET.role == 'PENRO' %}selected{% endif %}>PENRO</option>
+                        <option value="CENRO" {% if request.GET.role == 'CENRO' %}selected{% endif %}>CENRO</option>
+                        <option value="EVALUATOR" {% if request.GET.role == 'EVALUATOR' %}selected{% endif %}>Evaluator</option>
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <label for="from" style="font-weight: 500; margin-bottom: 0.5rem;">Date From:</label>
+                    <input type="date" id="from" name="from" value="{{ request.GET.from }}" style="padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <label for="to" style="font-weight: 500; margin-bottom: 0.5rem;">Date To:</label>
+                    <input type="date" id="to" name="to" value="{{ request.GET.to }}" style="padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button type="submit" style="background: #007bff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Filter</button>
+                </div>
+            </form>
+        </div>
+
         <h2>Pending User Registrations</h2>
         <div class="table-wrap">
             <table>

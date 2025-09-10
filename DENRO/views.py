@@ -118,12 +118,49 @@ def approve_users(request):
         except User.DoesNotExist:
             pass
 
+    # Base querysets
     pending_users = User.objects.filter(
         is_approved=False, is_rejected=False, is_deactivated=False
     )
     approved_users = User.objects.filter(is_approved=True, is_deactivated=False)
     rejected_users = User.objects.filter(is_rejected=True)
     deactivated_users = User.objects.filter(is_deactivated=True)
+
+    # Filters
+    q = request.GET.get("q")
+    role = request.GET.get("role")
+    dfrom = request.GET.get("from")
+    dto = request.GET.get("to")
+
+    if q:
+        pending_users = pending_users.filter(
+            Q(username__icontains=q) | Q(email__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q)
+        )
+        approved_users = approved_users.filter(
+            Q(username__icontains=q) | Q(email__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q)
+        )
+        rejected_users = rejected_users.filter(
+            Q(username__icontains=q) | Q(email__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q)
+        )
+        deactivated_users = deactivated_users.filter(
+            Q(username__icontains=q) | Q(email__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q)
+        )
+    if role:
+        pending_users = pending_users.filter(role=role)
+        approved_users = approved_users.filter(role=role)
+        rejected_users = rejected_users.filter(role=role)
+        deactivated_users = deactivated_users.filter(role=role)
+    if dfrom:
+        pending_users = pending_users.filter(date_joined__date__gte=dfrom)
+        approved_users = approved_users.filter(date_joined__date__gte=dfrom)
+        rejected_users = rejected_users.filter(date_joined__date__gte=dfrom)
+        deactivated_users = deactivated_users.filter(date_joined__date__gte=dfrom)
+    if dto:
+        pending_users = pending_users.filter(date_joined__date__lte=dto)
+        approved_users = approved_users.filter(date_joined__date__lte=dto)
+        rejected_users = rejected_users.filter(date_joined__date__lte=dto)
+        deactivated_users = deactivated_users.filter(date_joined__date__lte=dto)
+
     notifications, unread_count = get_unread_notifications()
 
     return render(
