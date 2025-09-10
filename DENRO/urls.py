@@ -20,6 +20,9 @@ urlpatterns = [
     path("super-admin/dashboard/", views.superadmin_dashboard, name="SA-dashboard"),
     path("custom-admin/dashboard/", views.admin_dashboard, name="admin_dashboard"),
     path("penro/dashboard/", views.penro_dashboard, name="PENRO_dashboard"),
+    path("penro/create-account/", views.penro_create_account, name="penro_create_account"),
+    path("penro/reports/", views.penro_reports, name="penro_reports"),
+    path("penro/activity-logs/", views.penro_activity_logs, name="penro_activity_logs"),
     path("cenro/dashboard/", views.cenro_dashboard, name="CENRO_dashboard"),
     # CENRO sub-pages
     path("cenro/activitylogs/", views.cenro_activitylogs, name="CENRO_activitylogs"),

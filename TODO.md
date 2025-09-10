@@ -1,15 +1,10 @@
-# TODO: Add Dependent Region Dropdown for PENRO and CENRO in Create Account Form
+# TODO: Create New PENRO Templates and Update Paths
 
-## Tasks:
-- [x] Update admin_activitylogs.html to add region dropdown (initially hidden)
-- [x] Add JavaScript to show region dropdown when PENRO is selected
-- [x] Update admin_activity_logs view in views.py to save region field
-- [x] Add CENRO region options: Tagbiliran, Cebu, Argao, Talibon, Ayungon, Dumaguete
-- [x] Test the form functionality
-
-## Details:
-- When role is PENRO, show region dropdown with options: Bohol, Cebu, Siquijor, Negros Oriental
-- When role is CENRO, show region dropdown with options: Tagbiliran, Cebu, Argao, Talibon, Ayungon, Dumaguete
-- Region field is already in User model
-- Form is in DENRO/templates/ADMIN/admin_activitylogs.html
-- View is admin_activity_logs in DENRO/views.py
+## Tasks
+- [x] Create new views in views.py for PENRO sub-pages (create_account, reports, activity_logs)
+- [x] Add new URL paths in urls.py for PENRO sub-pages
+- [x] Update sidenav_penro.html to link to new paths (change Activity Logs to User Accounts or add new link)
+- [x] Create PENRO/PENRO_create_account.html template with create account form, roles only CENRO and EVALUATOR
+- [x] Create PENRO/PENRO_reports.html template copying design from ADMIN/admin_reports.html
+- [x] Create PENRO/PENRO_activitylogs.html template copying design from ADMIN/admin_activitylogs.html
+- [x] Test the new pages (skipped by user)

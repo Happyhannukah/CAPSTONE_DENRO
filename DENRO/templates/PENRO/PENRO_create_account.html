@@ -3,9 +3,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Activity Logs</title>
-    <!-- Updated CSS path to match the imported dashboard.css -->
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <title>PENRO Create Account</title>
+    <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
     <!-- Added notification bell CSS styling -->
@@ -156,13 +155,13 @@
 </head>
 <body>
     <!-- Sidebar -->
-    {% include 'includes/adminsidebar.html' %}
+    {% include 'includes/sidenav/sidenav_penro.html' %}
 
     <!-- Main Content -->
     <div class="content">
         <!-- Top Bar -->
         <div class="top-bar">
-            <h2>Activity Logs</h2>
+            <h2>Create New Account</h2>
             <!-- Added notification bell icon with same functionality as dashboard -->
             <div class="notification">
                 <button id="notifBtn" class="bell-btn">
@@ -190,39 +189,10 @@
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="filters">
-            <form method="get">
-                <input type="text" name="q" placeholder="Search..." value="{{ request.GET.q }}">
-                <select name="role">
-                    <option value="">All Roles</option>
-                    <option value="ADMIN" {% if request.GET.role == 'ADMIN' %}selected{% endif %}>Admin</option>
-                    <option value="PENRO" {% if request.GET.role == 'PENRO' %}selected{% endif %}>PENRO</option>
-                    <option value="CENRO" {% if request.GET.role == 'CENRO' %}selected{% endif %}>CENRO</option>
-                    <option value="EVALUATOR" {% if request.GET.role == 'EVALUATOR' %}selected{% endif %}>Evaluator</option>
-                </select>
-                <input type="text" name="action" placeholder="Action" value="{{ request.GET.action }}">
-                <input type="date" name="from" value="{{ request.GET.from }}">
-                {% comment %} <input type="date" name="to" value="{{ request.GET.to }}"> {% endcomment %}
-                <button type="submit">Filter</button>
-            </form>
-        </div>
-
-        <!-- Metrics -->
-        <div class="cards">
-            <div class="card"><h3>Total Events</h3><p>{{ metrics.total_events }}</p></div>
-            <div class="card"><h3>Unique Users</h3><p>{{ metrics.unique_users }}</p></div>
-            <div class="card"><h3>Errors</h3><p>{{ metrics.errors }}</p></div>
-            <div class="card"><h3>This Week</h3><p>{{ metrics.this_week }}</p></div>
-        </div>
-
         <!-- Manual Account Creation -->
         <div class="account-creation-container" style="background: #fff; padding: 1.5rem; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 2rem;">
             <h3 style="margin-bottom: 1rem; color: #333;">Create New Account</h3>
-            <button id="toggleCreateForm" class="btn btn-primary" style="background: #007bff; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-size: 1rem; margin-bottom: 1rem;">
-                <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>Create Account
-            </button>
-            <form id="createAccountForm" method="post" style="display: none; background: #f8f9fa; padding: 2rem; border-radius: 8px; border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <form method="post" style="background: #f8f9fa; padding: 2rem; border-radius: 8px; border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="create_account">
 
@@ -281,209 +251,52 @@
                             <label for="role" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #495057;">Role:</label>
                             <select id="role" name="role" required style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.95rem; background-color: white; transition: border-color 0.3s ease;">
                                 <option value="">Select Role</option>
-                                <option value="ADMIN">Admin</option>
-                                <option value="PENRO">PENRO</option>
                                 <option value="CENRO">CENRO</option>
-                                <option value="EVALUATOR">Evaluator</option>
+                                <option value="EVALUATOR">EVALUATOR</option>
                             </select>
                         </div>
                     </div>
-
-                    <!-- Region dropdown for PENRO -->
-                    <div id="regionContainer" style="display: none; margin-top: 1rem;">
-                        <label for="region" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #495057;">Office Location:</label>
-                        <select id="region" name="region" style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.95rem; background-color: white; transition: border-color 0.3s ease;">
+                    <div id="regionContainer" style="display: none; margin-bottom: 1rem;">
+                        <label for="region" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #495057;">Office location:</label>
+                        <select id="regionSelect" name="region" style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.95rem; background-color: white; transition: border-color 0.3s ease;">
                             <option value="">Select Office</option>
-                            <option value="Bohol">Bohol</option>
-                            <option value="Cebu">Cebu</option>
-                            <option value="Siquijor">Siquijor</option>
-                            <option value="Negros Oriental">Negros Oriental</option>
+                            <option value="Cebu City">Cebu City</option>
+                            <option value="Argao">Argao</option>
+                            <option value="Talibon">Talibon</option>
+                            <option value="Tagbiliran City">Tagbiliran City</option>
+                            <option value="Ayungon">Ayungon</option>
+                            <option value="Dumaguete City">Dumaguete City</option>
                         </select>
                     </div>
                 </div>
 
                 <!-- Form Actions -->
                 <div style="display: flex; gap: 1rem; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid #dee2e6;">
-                    <button type="button" id="cancelCreate" style="background: #6c757d; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background-color 0.3s ease;">Cancel</button>
                     <button type="submit" style="background: #28a745; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background-color 0.3s ease;">Create Account</button>
                 </div>
             </form>
         </div>
-
-        <!-- User Details Modal -->
-        <div id="userModal" class="modal" style="display:none;">
-          <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>User Recent Actions</h3>
-            <div id="userDetailsContent">
-              <!-- JS will inject logs here -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Activity Logs Table -->
-        <div class="section-title">Activity Logs</div>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>Details</th>
-                        <th>Latitude</th>
-                        <th>Longitude</th>
-                        <th>Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in logs %}
-                    <tr>
-                        <td>
-                            <a href="#" class="user-link" data-user-id="{{ log.user.id }}">
-                                {{ log.user.username }}
-                            </a>
-                        </td>
-                        <td>{{ log.action }}</td>
-                        <td>{{ log.details }}</td>
-                        <td>{{ log.latitude }}</td>
-                        <td>{{ log.longitude }}</td>
-                        <td>{{ log.created_at|date:"M d, Y H:i" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6">No logs found</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="pagination">
-            {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
-            {% endif %}
-            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
-            {% endif %}
-        </div>
     </div>
 
     <!-- JS -->
-    <script>
-        // Toggle Create Account Form
-        document.getElementById('toggleCreateForm').addEventListener('click', function() {
-            const form = document.getElementById('createAccountForm');
-            const isVisible = form.style.display !== 'none';
-            form.style.display = isVisible ? 'none' : 'block';
-            this.innerHTML = isVisible ?
-                '<i class="fas fa-plus" style="margin-right: 0.5rem;"></i>Create Account' :
-                '<i class="fas fa-minus" style="margin-right: 0.5rem;"></i>Hide Form';
-        });
-
-        // Cancel Create Account Form
-        document.getElementById('cancelCreate').addEventListener('click', function() {
-            const form = document.getElementById('createAccountForm');
-            form.style.display = 'none';
-            document.getElementById('toggleCreateForm').innerHTML = '<i class="fas fa-plus" style="margin-right: 0.5rem;"></i>Create Account';
-            form.reset();
-            // Hide region dropdown on cancel
-            document.getElementById('regionContainer').style.display = 'none';
-        });
-
-        // Show/hide region dropdown based on role selection
-        document.getElementById('role').addEventListener('change', function() {
-            const regionContainer = document.getElementById('regionContainer');
-            const regionSelect = document.getElementById('region');
-            const selectedRole = this.value;
-
-            if (selectedRole === 'PENRO' || selectedRole === 'CENRO') {
-                regionContainer.style.display = 'block';
-                regionSelect.required = true;
-                // Clear existing options
-                regionSelect.innerHTML = '<option value="">Select Region</option>';
-                // Add options based on role
-                let options = [];
-                if (selectedRole === 'PENRO') {
-                    options = ['Bohol', 'Cebu', 'Siquijor', 'Negros Oriental'];
-                } else if (selectedRole === 'CENRO') {
-                    options = ['Tagbiliran', 'Cebu', 'Argao', 'Talibon', 'Ayungon', 'Dumaguete'];
-                }
-                options.forEach(option => {
-                    const opt = document.createElement('option');
-                    opt.value = option;
-                    opt.textContent = option;
-                    regionSelect.appendChild(opt);
-                });
-            } else {
-                regionContainer.style.display = 'none';
-                regionSelect.required = false;
-                regionSelect.value = '';
-            }
-        });
-    </script>
-
-    <!-- Modal Script -->
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const modal = document.getElementById("userModal");
-      const closeBtn = modal.querySelector(".close");
-      const detailsContainer = document.getElementById("userDetailsContent");
-
-      document.querySelectorAll(".user-link").forEach(link => {
-        link.addEventListener("click", function(e) {
-          e.preventDefault();
-          const userId = this.dataset.userId;
-          const url = `/activitylogs/user/${userId}/`;
-
-          fetch(url, {
-            headers: {'Accept': 'application/json'}
-          })
-          .then(res => res.json())
-          .then(data => {
-            const table = document.createElement('table');
-            table.innerHTML = `
-              <thead>
-                <tr>
-                  <th>Action</th>
-                  <th>Details</th>
-                  <th>Timestamp</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${data.logs.map(log => `
-                  <tr>
-                    <td>${log.action}</td>
-                    <td>${log.details}</td>
-                    <td>${log.created_at}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            `;
-            detailsContainer.innerHTML = '';
-            detailsContainer.appendChild(table);
-            modal.style.display = "block";
-          })
-          .catch(error => {
-            console.error('Error fetching user details:', error);
-            detailsContainer.innerHTML = '<p>Error loading user details.</p>';
-            modal.style.display = "block";
-          });
-        });
-      });
-
-      closeBtn.onclick = function() {
-        modal.style.display = "none";
-      }
-      window.onclick = function(event) {
-        if (event.target == modal) modal.style.display = "none";
-      }
-    });
-    </script>
-
-    <!-- Added JavaScript for notification functionality -->
-    <!-- Updated JS path to match the imported admin_dashboard.js -->
     <script src="{% static 'js/admin_dashboard.js' %}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const roleSelect = document.getElementById('role');
+            const regionContainer = document.getElementById('regionContainer');
+            const regionSelect = document.getElementById('regionSelect');
+
+            roleSelect.addEventListener('change', function() {
+                if (this.value === 'CENRO' || this.value === 'EVALUATOR') {
+                    regionContainer.style.display = 'block';
+                    regionSelect.required = true;
+                } else {
+                    regionContainer.style.display = 'none';
+                    regionSelect.required = false;
+                    regionSelect.value = '';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

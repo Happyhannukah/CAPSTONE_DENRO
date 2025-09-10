@@ -57,6 +57,7 @@ class User(AbstractUser):
         CENRO = "CENRO", "CENRO"
         EVALUATOR = "EVALUATOR", "Evaluator"
 
+    email = models.EmailField()
     role = models.CharField(
         max_length=20, choices=RoleChoices.choices, default=RoleChoices.ADMIN
     )
@@ -65,7 +66,7 @@ class User(AbstractUser):
     is_deactivated = models.BooleanField(default=False)
 
     # Optional profile fields
-    gender = models.CharField(max_length=10, blank=True, null=True)
+    gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female')], blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     region = models.CharField(max_length=100, blank=True, null=True)
     profile_pic = models.CharField(max_length=255, blank=True, null=True)

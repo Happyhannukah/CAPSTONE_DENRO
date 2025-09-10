@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CENRO Reports</title>
+    <title>PENRO Reports</title>
     <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
     <style>
@@ -58,13 +58,13 @@
 </head>
 <body>
     <!-- Sidebar -->
-    {% include 'includes/sidenav/sidenav_cenro.html' %}
+    {% include 'includes/sidenav/sidenav_penro.html' %}
 
     <!-- Main Content -->
     <div class="content">
         <!-- Top Bar -->
         <div class="top-bar">
-            <h2>CENRO Reports</h2>
+            <h2>PENRO Reports</h2>
             <div class="notification">
                 <button id="notifBtn" class="bell-btn">
                     🔔 {% if unread_count > 0 %}
@@ -132,7 +132,7 @@
                         <td>{{ report.profile.proponent_name }}</td>
                         <td>{{ report.profile.location }}</td>
                         <td>
-                            <form method="post" action="{% url 'cenro_reports' %}">
+                            <form method="post" action="{% url 'penro_reports' %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="report_id" value="{{ report.id }}">
                                 <button type="submit" name="action" value="accept" class="btn btn-accept">Accept</button>
