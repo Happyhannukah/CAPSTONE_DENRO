@@ -15,6 +15,7 @@ urlpatterns = [
     path("verify-2fa/", views.verify_2fa, name="verify_2fa"),
     path("logout/", views.logout_view, name="logout"),
     path("register/", views.register_view, name="register"),
+    path("profile/", views.user_profile, name="user_profile"),
     # Dashboards
     path("super-admin/dashboard/", views.superadmin_dashboard, name="SA-dashboard"),
     path("custom-admin/dashboard/", views.admin_dashboard, name="admin_dashboard"),
@@ -36,6 +37,7 @@ urlpatterns = [
     path("custom-admin/activity-logs/", views.admin_activity_logs, name="admin_activitylogs"),
     path("activitylogs/user/<int:user_id>/", views.user_activity_detail, name="user_activity_detail"),
     path("cenro/activitylogs/", views.cenro_activitylogs, name="CENRO_activitylogs"),
+    path("change-password/", views.change_password, name="change_password"),
     path("api/welcome/", views.welcome_api, name="welcome_api"),
 
 

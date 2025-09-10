@@ -266,6 +266,18 @@
                     </div>
                 </div>
 
+                <!-- Region dropdown for PENRO -->
+                <div id="regionContainer" style="display: none; margin-bottom: 1rem;">
+                    <label for="region" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Office:</label>
+                    <select id="region" name="region" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;">
+                        <option value="">Select Office</option>
+                        <option value="Bohol">Bohol</option>
+                        <option value="Cebu">Cebu</option>
+                        <option value="Siquijor">Siquijor</option>
+                        <option value="Negros Oriental">Negros Oriental</option>
+                    </select>
+                </div>
+
                 <!-- Added missing ID number field that backend expects -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     <div>
@@ -363,6 +375,39 @@
             form.style.display = 'none';
             document.getElementById('toggleCreateForm').innerHTML = '<i class="fas fa-plus" style="margin-right: 0.5rem;"></i>Create Account';
             form.reset();
+            // Hide region dropdown on cancel
+            document.getElementById('regionContainer').style.display = 'none';
+        });
+
+        // Show/hide region dropdown based on role selection
+        document.getElementById('role').addEventListener('change', function() {
+            const regionContainer = document.getElementById('regionContainer');
+            const regionSelect = document.getElementById('region');
+            const selectedRole = this.value;
+
+            if (selectedRole === 'PENRO' || selectedRole === 'CENRO') {
+                regionContainer.style.display = 'block';
+                regionSelect.required = true;
+                // Clear existing options
+                regionSelect.innerHTML = '<option value="">Select Region</option>';
+                // Add options based on role
+                let options = [];
+                if (selectedRole === 'PENRO') {
+                    options = ['Bohol', 'Cebu', 'Siquijor', 'Negros Oriental'];
+                } else if (selectedRole === 'CENRO') {
+                    options = ['Tagbiliran', 'Cebu', 'Argao', 'Talibon', 'Ayungon', 'Dumaguete'];
+                }
+                options.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option;
+                    regionSelect.appendChild(opt);
+                });
+            } else {
+                regionContainer.style.display = 'none';
+                regionSelect.required = false;
+                regionSelect.value = '';
+            }
         });
     </script>
 

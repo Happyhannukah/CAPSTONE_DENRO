@@ -354,27 +354,95 @@ def verify_2fa(request):
 @login_required
 def user_profile(request):
     if request.method == "POST":
-        request.user.first_name = request.POST.get("first_name", request.user.first_name)
-        request.user.last_name = request.POST.get("last_name", request.user.last_name)
+        # Update profile info
         request.user.email = request.POST.get("email", request.user.email)
-        request.user.gender = request.POST.get("gender", request.user.gender)
         request.user.phone_number = request.POST.get("phone_number", request.user.phone_number)
         request.user.region = request.POST.get("region", request.user.region)
         request.user.profile_pic = request.POST.get("profile_pic", request.user.profile_pic)
-        request.user.id_number = request.POST.get("id_number", request.user.id_number)
+
+        # Handle password change if provided
+        old_password = request.POST.get("old_password")
+        new_password = request.POST.get("new_password")
+        confirm_password = request.POST.get("confirm_password")
+
+        password_changed = False
+        if old_password and new_password and confirm_password:
+            if not request.user.check_password(old_password):
+                messages.error(request, "Old password is incorrect.")
+                return redirect("user_profile")
+
+            if new_password != confirm_password:
+                messages.error(request, "New passwords do not match.")
+                return redirect("user_profile")
+
+            if len(new_password) < 8:
+                messages.error(request, "New password must be at least 8 characters long.")
+                return redirect("user_profile")
+
+            request.user.set_password(new_password)
+            password_changed = True
+
         request.user.save()
 
         ActivityLog.objects.create(
             user=request.user,
             action="UPDATE",
-            details="Updated profile information",
+            details="Updated profile information" + (" and changed password" if password_changed else ""),
             ip_address=request.META.get("REMOTE_ADDR"),
         )
 
-        messages.success(request, "Profile updated successfully.")
+        messages.success(request, "Profile updated successfully." + (" Password changed." if password_changed else ""))
         return redirect("user_profile")
 
-    return render(request, "user_profile.html", {"user": request.user})
+    notifications, unread_count = get_unread_notifications()
+
+    return render(request, "user_profile.html", {
+        "user": request.user,
+        "notifications": notifications,
+        "unread_count": unread_count,
+    })
+
+
+# ----------------- Change Password -----------------
+@login_required
+def change_password(request):
+    if request.method == "POST":
+        old_password = request.POST.get("old_password")
+        new_password = request.POST.get("new_password")
+        confirm_password = request.POST.get("confirm_password")
+
+        if not request.user.check_password(old_password):
+            messages.error(request, "Old password is incorrect.")
+            return redirect("change_password")
+
+        if new_password != confirm_password:
+            messages.error(request, "New passwords do not match.")
+            return redirect("change_password")
+
+        if len(new_password) < 8:
+            messages.error(request, "New password must be at least 8 characters long.")
+            return redirect("change_password")
+
+        request.user.set_password(new_password)
+        request.user.save()
+
+        ActivityLog.objects.create(
+            user=request.user,
+            action="UPDATE",
+            details="Changed password",
+            ip_address=request.META.get("REMOTE_ADDR"),
+        )
+
+        messages.success(request, "Password changed successfully.")
+        return redirect("change_password")
+
+    notifications, unread_count = get_unread_notifications()
+
+    return render(request, "change_password.html", {
+        "user": request.user,
+        "notifications": notifications,
+        "unread_count": unread_count,
+    })
 
 
 # ----------------- Admin Activity Logs -----------------
@@ -391,6 +459,7 @@ def admin_activity_logs(request):
         first_name = request.POST.get("first_name")
         last_name = request.POST.get("last_name")
         id_number = request.POST.get("id_number")
+        region = request.POST.get("region") if role in ["PENRO", "CENRO"] else None
 
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists")
@@ -405,6 +474,7 @@ def admin_activity_logs(request):
                 role=role,
                 password=make_password(password),
                 id_number=id_number,
+                region=region,
                 is_approved=False,
             )
 
