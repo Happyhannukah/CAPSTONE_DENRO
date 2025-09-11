@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -138,4 +139,7 @@ EMAIL_HOST_PASSWORD = 'vidf urlb tusu vmqt'
 DEFAULT_FROM_EMAIL = 'DENRO <zeycaramales@gmail.com>'
 
 # Google Maps API Key
-GOOGLE_STATIC_MAPS_KEY = 'AIzaSyDTjKhgiG9wJmPg4JbRYxXsfNCCcCr85XM'
+GOOGLE_STATIC_MAPS_KEY = config('GOOGLE_STATIC_MAPS_KEY')
+
+# Mapbox API Token
+MAPBOX_TOKEN = config('MAPBOX_TOKEN', default='sk.eyJ1IjoiY2Fwc3RvbmUtZGVucm8iLCJhIjoiY21mM3JvMTIxMDE0aDJpc2c5eW9jOTAxbSJ9.mKKeeW21OUkqBalJeLRWRQ')

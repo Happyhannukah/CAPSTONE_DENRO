@@ -1,4 +1,4 @@
-{% load static %}
+ {% load static %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -75,7 +75,8 @@
         <div class="chart-container">
           <h3>User Locations</h3>
           {% if map_url %}
-          <img src="{{ map_url }}" alt="User Locations Map" style="width:100%; height:auto;">
+          <img src="{{ map_url }}" alt="User Locations Map" style="width:100%; height:auto; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <p style="display:none; color:red;">Failed to load map. Please check your Google Maps API key and ensure 'localhost' is in the allowed referrers.</p>
           {% else %}
           <p>No user locations to display</p>
           {% endif %}

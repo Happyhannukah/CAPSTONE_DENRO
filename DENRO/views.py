@@ -719,6 +719,9 @@ def evaluator_dashboard(request):
         # Default to Philippines center if no region or invalid region
         map_url = f"https://maps.googleapis.com/maps/api/staticmap?center=12.8797,121.7740&zoom=6&size=400x300&key={settings.GOOGLE_STATIC_MAPS_KEY}"
 
+    # Log the map_url for debugging
+    logging.info(f"Generated map_url: {map_url}")
+
     logs_qs = ActivityLog.objects.filter(user__role__in=['CENRO', 'EVALUATOR']).select_related("user").order_by("-created_at")
 
     # Filters
@@ -1152,6 +1155,31 @@ def user_activity_detail(request, user_id):
         "ADMIN/user_activity_detail.html",
         {"user": user, "logs": logs},
     )
+
+
+# ----------------- Update Location API -----------------
+@login_required
+def update_location(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            latitude = data.get('latitude')
+            longitude = data.get('longitude')
+
+            if latitude and longitude:
+                # Log the location update
+                ActivityLog.objects.create(
+                    user=request.user,
+                    action="LOCATION_UPDATE",
+                    details=f"Location updated: {latitude}, {longitude}",
+                    ip_address=request.META.get("REMOTE_ADDR"),
+                )
+                return JsonResponse({"status": "success", "message": "Location updated successfully"})
+            else:
+                return JsonResponse({"status": "error", "message": "Invalid coordinates"}, status=400)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
 
 # ----------------- Welcome API -----------------
