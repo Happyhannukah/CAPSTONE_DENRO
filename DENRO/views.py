@@ -627,10 +627,10 @@ def superadmin_dashboard(request):
 @login_required
 def penro_dashboard(request):
     stats = get_dashboard_stats()
-    users = get_recent_users()
+    users = User.objects.filter(role__in=['CENRO', 'EVALUATOR'], last_login__isnull=False).order_by('-last_login')[:5]
     notifications, unread_count = get_unread_notifications()
 
-    logs_qs = ActivityLog.objects.all().select_related("user").order_by("-created_at")
+    logs_qs = ActivityLog.objects.filter(user__role__in=['CENRO', 'EVALUATOR']).select_related("user").order_by("-created_at")
 
     # Filters
     q = request.GET.get("q")
