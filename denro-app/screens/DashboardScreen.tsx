@@ -1,14 +1,41 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+// screens/DashboardScreen.tsx
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Pressable,
+} from 'react-native';
 import { Ionicons, Entypo, FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import SettingsMenu from '../components/SettingsMenu';
+import { loadProfile } from '../utils/profile'; // expects { firstName, lastName, role? }
 
 export default function DashboardScreen() {
   const router = useRouter();
 
-  const handleLogout = () => {
-    router.replace('/login');
-  };
+  // Settings gear modal (same as HomeScreen)
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  // Display name + role loaded from local profile
+  const [displayName, setDisplayName] = useState('User');
+  const [role, setRole] = useState<string>(''); // optional
+
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        const p = await loadProfile(); // { firstName, lastName, role? }
+        const full = [p.firstName, p.lastName].filter(Boolean).join(' ').trim();
+        setDisplayName(full || 'User');
+        setRole(typeof (p as any).role === 'string' ? (p as any).role : '');
+      })();
+    }, [])
+  );
+
+  const handleLogout = () => router.replace('/login');
 
   return (
     <View style={styles.container}>
@@ -16,7 +43,16 @@ export default function DashboardScreen() {
       <View style={styles.topBar}>
         <Image source={require('../assets/images/denr-logo.png')} style={styles.logo} />
         <Text style={styles.appName}>DENR GeoCam</Text>
-        <Ionicons name="settings-sharp" size={24} color="black" style={styles.settingsIcon} />
+
+        {/* Gear opens the same Settings modal used on Home */}
+        <Pressable
+          onPress={() => setMenuVisible(true)}
+          hitSlop={12}
+          style={styles.settingsIcon}
+          accessibilityLabel="Open settings menu"
+        >
+          <Ionicons name="settings-sharp" size={24} color="black" />
+        </Pressable>
       </View>
 
       {/* Navigation Links */}
@@ -38,34 +74,66 @@ export default function DashboardScreen() {
       {/* Dashboard Stats */}
       <View style={styles.dashboardSection}>
         <Text style={styles.welcomeText}>Dashboard</Text>
-        <Text style={styles.username}>Juan Dela Cruz</Text>
+        <Text style={styles.username}>
+          {displayName}{role ? ` — ${role}` : ''}
+        </Text>
 
-        <View style={styles.statBox}><Text style={styles.statLabel}>New Evaluation entries</Text><Text style={styles.statValue}>8</Text></View>
-        <View style={styles.statBox}><Text style={styles.statLabel}>Total Evaluation entries</Text><Text style={styles.statValue}>30</Text></View>
-        <View style={styles.statBox}><Text style={styles.statLabel}>Total Approved</Text><Text style={styles.statValue}>15</Text></View>
-        <View style={styles.statBox}><Text style={styles.statLabel}>Total Rejected</Text><Text style={styles.statValue}>5</Text></View>
-        <View style={styles.statBox}><Text style={styles.statLabel}>Total Pending</Text><Text style={styles.statValue}>10</Text></View>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>New Evaluation entries</Text>
+          <Text style={styles.statValue}>8</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>Total Evaluation entries</Text>
+          <Text style={styles.statValue}>30</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>Total Approved</Text>
+          <Text style={styles.statValue}>15</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>Total Rejected</Text>
+          <Text style={styles.statValue}>5</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>Total Pending</Text>
+          <Text style={styles.statValue}>10</Text>
+        </View>
 
         <TouchableOpacity style={styles.importButton}>
           <Text style={styles.importText}>Import file</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Bottom Navigation */}
+      {/* Bottom nav tiles */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navIcon}>
+        <TouchableOpacity
+          style={styles.navIcon}
+          onPress={() => router.push('/FormStartSubmission')}
+        >
           <Entypo name="list" size={24} color="black" />
           <Text>Template</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.navIcon, styles.activeIcon]}>
+
+        <TouchableOpacity
+          style={[styles.navIcon, styles.activeIcon]}
+          onPress={() => router.push('/camera')}
+          accessibilityLabel="Open camera"
+        >
           <Ionicons name="camera" size={24} color="black" />
           <Text>Camera</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navIcon}>
+
+        <TouchableOpacity
+          style={styles.navIcon}
+          onPress={() => router.push('/CollectionScreen')}
+        >
           <FontAwesome name="image" size={24} color="black" />
           <Text>Collection</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Settings modal (same component as Home) */}
+      <SettingsMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </View>
   );
 }
@@ -86,10 +154,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  logo: {
-    width: 40,
-    height: 40,
-  },
+  logo: { width: 40, height: 40, resizeMode: 'contain' },
   appName: {
     fontSize: 16,
     fontWeight: '600',
@@ -97,23 +162,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginLeft: -40,
   },
-  settingsIcon: {
-    alignSelf: 'flex-end',
-  },
+  settingsIcon: { alignSelf: 'flex-end' },
+
   navRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginVertical: 20,
   },
-  navLink: {
-    color: '#008B8B',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  dashboardSection: {
-    alignItems: 'center',
-    marginTop: 10,
-  },
+  navLink: { color: '#008B8B', fontSize: 14, fontWeight: '600' },
+
+  dashboardSection: { alignItems: 'center', marginTop: 10 },
   welcomeText: {
     fontSize: 18,
     fontWeight: '700',
@@ -125,8 +183,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textDecorationLine: 'underline',
     marginBottom: 20,
-    marginRight: 200
+    marginRight: 200,
   },
+
   statBox: {
     backgroundColor: '#DFFFD8',
     padding: 12,
@@ -136,26 +195,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4CAF50',
   },
-  statLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  importButton: {
-    padding: 10,
-    borderRadius: 10,
-    backgroundColor: '#008B8B',
-  },
-  importText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
+  statLabel: { fontSize: 14, fontWeight: '600', color: '#333' },
+  statValue: { fontSize: 18, fontWeight: 'bold', color: '#000' },
+
+  importButton: { padding: 10, borderRadius: 10, backgroundColor: '#008B8B' },
+  importText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+
   bottomNav: {
     position: 'absolute',
     bottom: 30,
@@ -174,7 +219,5 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
     width: 90,
   },
-  activeIcon: {
-    backgroundColor: '#DFFFD8',
-  },
+  activeIcon: { backgroundColor: '#DFFFD8' },
 });

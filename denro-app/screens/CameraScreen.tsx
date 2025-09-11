@@ -1,3 +1,4 @@
+// screens/CameraScreen.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -26,6 +27,8 @@ type PhotoRecord = {
 };
 
 const PHOTOS_KEY = 'photos';
+const formatCoord = (v: number, decimals = 6) =>
+  Number.isFinite(v) ? Number(v).toFixed(decimals) : '';
 
 async function addPhotoToDB(rec: PhotoRecord) {
   const raw = await AsyncStorage.getItem(PHOTOS_KEY);
@@ -96,6 +99,15 @@ export default function CameraScreen() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Load last photo so the gallery thumb is not empty on first launch
+  useEffect(() => {
+    (async () => {
+      const raw = await AsyncStorage.getItem(PHOTOS_KEY);
+      const list: PhotoRecord[] = raw ? JSON.parse(raw) : [];
+      if (list.length > 0) setLastPhotoUri(list[0].uri);
+    })();
   }, []);
 
   // Seed immediate location, then watch continuously
@@ -201,14 +213,18 @@ export default function CameraScreen() {
       const latNum = Number(useLat);
       const lonNum = Number(useLon);
 
+      // normalize to same precision used in maps/text (stored as number)
+      const latFixed = Number(formatCoord(latNum, 6));
+      const lonFixed = Number(formatCoord(lonNum, 6));
+
       const sid = multiMode ? (sessionId ?? String(Date.now())) : `single-${Date.now()}`;
       if (multiMode && !sessionId) setSessionId(sid);
 
       const rec: PhotoRecord = {
         id: Date.now(),
         uri: pendingUri,
-        lat: isFinite(latNum) ? latNum : 0,
-        lon: isFinite(lonNum) ? lonNum : 0,
+        lat: isFinite(latFixed) ? latFixed : 0,
+        lon: isFinite(lonFixed) ? lonFixed : 0,
         acc,
         createdAt: new Date().toISOString(),
         sessionId: sid,
@@ -229,7 +245,14 @@ export default function CameraScreen() {
   };
 
   const cancelPreview = () => setPendingUri(null);
-  const finishSession = () => router.replace('/CollectionScreen');
+
+  const finishSession = () => {
+    if (multiMode && sessionId) {
+      router.replace({ pathname: '/CollectionDetailScreen', params: { id: sessionId } });
+    } else {
+      router.replace('/CollectionScreen');
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>

@@ -136,3 +136,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'zeycaramales@gmail.com'
 EMAIL_HOST_PASSWORD = 'vidf urlb tusu vmqt'
 DEFAULT_FROM_EMAIL = 'DENRO <zeycaramales@gmail.com>'
+
+# Google Maps API Key
+GOOGLE_STATIC_MAPS_KEY = 'AIzaSyDTjKhgiG9wJmPg4JbRYxXsfNCCcCr85XM'

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 type Entry = { id: number; form: string; note?: string; createdAt: string };
 type Group = { id: number; createdAt: string; title: string; entries: Entry[] };
@@ -16,6 +17,7 @@ type Group = { id: number; createdAt: string; title: string; entries: Entry[] };
 const isStart = (e: Entry) => e.form?.toLowerCase().startsWith('start');
 
 export default function ViewPreviousEntries() {
+  const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
@@ -100,6 +102,17 @@ export default function ViewPreviousEntries() {
 
   return (
     <View style={styles.container}>
+      {/* Back button */}
+      <TouchableOpacity
+        onPress={() => router.back()}
+        style={styles.backBtn}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Text style={styles.backArrow}>←</Text>
+        <Text style={styles.backText}>Back</Text>
+      </TouchableOpacity>
+
       <Text style={styles.title}>Previous Entries</Text>
 
       {groups.length === 0 ? (
@@ -159,7 +172,24 @@ export default function ViewPreviousEntries() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
+
+  // Back button
+  backBtn: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    zIndex: 2,
+  },
+  backArrow: { fontSize: 18, marginRight: 6, color: '#333' },
+  backText: { fontSize: 16, color: '#333', fontWeight: '600' },
+
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 8, marginTop: 48 },
 
   folderCard: {
     borderWidth: 1,

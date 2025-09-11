@@ -163,6 +163,10 @@
     <!-- Sidebar -->
     {% if user.role == 'PENRO' %}
         {% include 'includes/sidenav/sidenav_penro.html' %}
+    {% elif user.role == 'CENRO' %}
+        {% include 'includes/sidenav/sidenav_cenro.html' %}
+    {% elif user.role == 'EVALUATOR' %}
+        {% include 'includes/sidenav/sidenav_evaluator.html' %}
     {% else %}
         {% include 'includes/adminsidebar.html' %}
     {% endif %}

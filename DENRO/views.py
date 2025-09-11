@@ -30,7 +30,7 @@ from .permissions import IsSuperAdmin, IsAdminOrSuperAdmin
 # ----------------- Notifications -----------------
 @login_required
 def mark_notification_read(request, pk):
-    note = get_object_or_404(Notification, pk=pk)
+    note = get_object_or_404(Notification, pk=pk, user=request.user)
     note.is_read = True
     note.save()
     return redirect("admin_dashboard")
@@ -64,9 +64,11 @@ def register_view(request):
             is_approved=False,  # pending by default
         )
 
-        Notification.objects.create(
-            user=user, message=f"New {role} registered: {username}"
-        )
+        # Send notification to admins about new registration
+        for admin in User.objects.filter(role__in=['ADMIN', 'SUPER_ADMIN']):
+            Notification.objects.create(
+                user=admin, message=f"New {role} registered: {username}"
+            )
 
         messages.success(request, "Your account is pending approval by Admin.")
         return redirect("login")
@@ -165,7 +167,7 @@ def approve_users(request):
         rejected_users = rejected_users.filter(date_joined__date__lte=dto)
         deactivated_users = deactivated_users.filter(date_joined__date__lte=dto)
 
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     return render(
         request,
@@ -234,7 +236,7 @@ def admin_reports(request):
         accepted_reports = accepted_reports.filter(report_date__lte=dto)
         declined_reports = declined_reports.filter(report_date__lte=dto)
 
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     return render(
         request,
@@ -270,8 +272,8 @@ def get_recent_users(limit=5):
     return User.objects.order_by("-date_joined")[:limit]
 
 
-def get_unread_notifications():
-    notifications = Notification.objects.filter(is_read=False).order_by("-created_at")
+def get_unread_notifications(request):
+    notifications = Notification.objects.filter(user=request.user, is_read=False).order_by("-created_at")
     return notifications, notifications.count()
 
 
@@ -280,7 +282,7 @@ def get_unread_notifications():
 def admin_dashboard(request):
     stats = get_dashboard_stats()
     users = get_recent_users()
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     logs_qs = ActivityLog.objects.all().select_related("user").order_by("-created_at")
 
@@ -339,22 +341,26 @@ def login_view(request):
                 messages.error(request, "Your account has been deactivated.")
                 return redirect("login")
 
-            # Generate 2FA code
-            code = str(random.randint(100000, 999999))
-            request.session['2fa_code'] = code
-            request.session['2fa_user_id'] = user.id
-            request.session['2fa_expires'] = (datetime.now() + timedelta(minutes=5)).timestamp()
-
-            # Send email
-            send_mail(
-                'Your 2FA Code for DENRO',
-                f'Your verification code is: {code}\n\nThis code will expire in 5 minutes.',
-                'DENRO <zeycaramales@gmail.com>',
-                [user.email],
-                fail_silently=False,
+            # Directly log in the user
+            login(request, user)
+            ActivityLog.objects.create(
+                user=user,
+                action="LOGIN",
+                details=f"Logged in from {request.META.get('REMOTE_ADDR', 'unknown')}",
+                ip_address=request.META.get("REMOTE_ADDR"),
             )
 
-            return redirect('verify_2fa')
+            # Redirect based on role
+            if user.role == "SUPER_ADMIN":
+                return redirect("SA-dashboard")
+            elif user.role == "ADMIN":
+                return redirect("admin_dashboard")
+            elif user.role == "PENRO":
+                return redirect("PENRO_dashboard")
+            elif user.role == "CENRO":
+                return redirect("CENRO_dashboard")
+            elif user.role == "EVALUATOR":
+                return redirect("evaluator_dashboard")
         else:
             return render(request, "LogIn.html", {"error": "Invalid username or password"})
 
@@ -397,7 +403,7 @@ def verify_2fa(request):
             elif user.role == "CENRO":
                 return redirect("CENRO_dashboard")
             elif user.role == "EVALUATOR":
-                return redirect("EVALUATOR-dashboard")
+                return redirect("evaluator_dashboard")
         else:
             messages.error(request, "Invalid verification code.")
             return redirect("login")
@@ -454,7 +460,7 @@ def user_profile(request):
         messages.success(request, "Profile updated successfully." + (" Password changed." if password_changed else ""))
         return redirect("user_profile")
 
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     return render(request, "user_profile.html", {
         "user": request.user,
@@ -496,7 +502,7 @@ def change_password(request):
         messages.success(request, "Password changed successfully.")
         return redirect("change_password")
 
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     return render(request, "change_password.html", {
         "user": request.user,
@@ -508,7 +514,7 @@ def change_password(request):
 # ----------------- Admin Activity Logs -----------------
 @login_required
 def admin_activity_logs(request):
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     # Handle manual account creation
     if request.method == "POST" and request.POST.get("action") == "create_account":
@@ -542,9 +548,11 @@ def admin_activity_logs(request):
                 is_approved=False,
             )
 
-            Notification.objects.create(
-                user=user, message=f"New {role} registered: {username} - Pending approval"
-            )
+            # Send notification to admins about new account created
+            for admin in User.objects.filter(role__in=['ADMIN', 'SUPER_ADMIN']):
+                Notification.objects.create(
+                    user=admin, message=f"New {role} account created: {username} - Pending approval"
+                )
 
             ActivityLog.objects.create(
                 user=request.user,
@@ -628,7 +636,7 @@ def superadmin_dashboard(request):
 def penro_dashboard(request):
     stats = get_dashboard_stats()
     users = User.objects.filter(role__in=['CENRO', 'EVALUATOR'], last_login__isnull=False).order_by('-last_login')[:5]
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     logs_qs = ActivityLog.objects.filter(user__role__in=['CENRO', 'EVALUATOR']).select_related("user").order_by("-created_at")
 
@@ -675,8 +683,85 @@ def cenro_dashboard(request):
 
 
 @login_required
+def evaluator_dashboard(request):
+    from django.conf import settings
+    stats = get_dashboard_stats()
+    users = User.objects.filter(role__in=['CENRO', 'EVALUATOR'], last_login__isnull=False).order_by('-last_login')[:5]
+    notifications, unread_count = get_unread_notifications(request)
+
+    # Region coordinates for Philippines
+    region_coords = {
+        'Region 1': '16.6167,120.3167',  # Ilocos
+        'Region 2': '15.4827,120.7120',  # Cagayan Valley
+        'Region 3': '14.9547,120.8989',  # Central Luzon
+        'Region 4A': '14.5995,121.0359',  # Calabarzon
+        'Region 4B': '13.7565,121.0583',  # Mimaropa
+        'Region 5': '13.4214,123.4137',  # Bicol
+        'Region 6': '10.7202,122.5621',  # Western Visayas
+        'Region 7': '10.3157,123.8854',  # Central Visayas
+        'Region 8': '11.2476,125.0020',  # Eastern Visayas
+        'Region 9': '8.1541,123.2588',  # Zamboanga Peninsula
+        'Region 10': '8.0202,124.6857',  # Northern Mindanao
+        'Region 11': '7.3042,126.0893',  # Davao
+        'Region 12': '6.5039,124.8460',  # Soccsksargen
+        'Region 13': '9.8432,126.1420',  # Caraga
+        'NCR': '14.5995,120.9842',  # Metro Manila
+        'CAR': '16.4023,120.5960',  # Cordillera
+        'BARMM': '6.5667,121.9833',  # Bangsamoro
+    }
+
+    # Get current user's region
+    user_region = request.user.region
+    if user_region and user_region in region_coords:
+        user_coords = region_coords[user_region]
+        map_url = f"https://maps.googleapis.com/maps/api/staticmap?center={user_coords}&zoom=8&size=400x300&markers=color:red|label:You|{user_coords}&key={settings.GOOGLE_STATIC_MAPS_KEY}"
+    else:
+        # Default to Philippines center if no region or invalid region
+        map_url = f"https://maps.googleapis.com/maps/api/staticmap?center=12.8797,121.7740&zoom=6&size=400x300&key={settings.GOOGLE_STATIC_MAPS_KEY}"
+
+    logs_qs = ActivityLog.objects.filter(user__role__in=['CENRO', 'EVALUATOR']).select_related("user").order_by("-created_at")
+
+    # Filters
+    q = request.GET.get("q")
+    role = request.GET.get("role")
+    action = request.GET.get("action")
+    dfrom = request.GET.get("from")
+    dto = request.GET.get("to")
+
+    if q:
+        logs_qs = logs_qs.filter(
+            Q(user__username__icontains=q) | Q(details__icontains=q) | Q(action__icontains=q)
+        )
+    if role:
+        logs_qs = logs_qs.filter(user__role=role)
+    if action:
+        logs_qs = logs_qs.filter(action=action)
+    if dfrom:
+        logs_qs = logs_qs.filter(created_at__date__gte=dfrom)
+    if dto:
+        logs_qs = logs_qs.filter(created_at__date__lte=dto)
+
+    paginator = Paginator(logs_qs, 20)
+    page_obj = paginator.get_page(request.GET.get("page") or 1)
+
+    return render(
+        request,
+        "EVALUATOR/EVALUATOR_dashboard.html",
+        {
+            "stats": stats,
+            "users": users,
+            "notifications": notifications,
+            "unread_count": unread_count,
+            "logs": page_obj.object_list,
+            "page_obj": page_obj,
+            "map_url": map_url,
+        },
+    )
+
+
+@login_required
 def cenro_activitylogs(request):
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     logs_qs = ActivityLog.objects.all().select_related("user").order_by("-created_at")
 
@@ -791,7 +876,7 @@ def cenro_reports(request):
         accepted_reports = accepted_reports.filter(report_date__lte=dto)
         declined_reports = declined_reports.filter(report_date__lte=dto)
 
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     return render(
         request,
@@ -814,7 +899,7 @@ def cenro_templates(request):
 # ----------------- PENRO Create Account -----------------
 @login_required
 def penro_create_account(request):
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     # Handle manual account creation
     if request.method == "POST" and request.POST.get("action") == "create_account":
@@ -830,39 +915,51 @@ def penro_create_account(request):
 
         if role not in ["CENRO", "EVALUATOR"]:
             messages.error(request, "Invalid role selected")
+        elif not username:
+            messages.error(request, "Username is required")
         elif User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists")
+        elif not email:
+            messages.error(request, "Email is required")
         elif User.objects.filter(email=email).exists():
             messages.error(request, "Email already exists")
+        elif not id_number:
+            messages.error(request, "ID Number is required")
         elif User.objects.filter(id_number=id_number).exists():
             messages.error(request, "ID Number already exists")
         else:
-            user = User.objects.create(
-                username=username,
-                email=email,
-                first_name=first_name,
-                last_name=last_name,
-                gender=gender,
-                role=role,
-                password=make_password(password),
-                id_number=id_number,
-                region=region,
-                is_approved=False,
-            )
+            try:
+                user = User.objects.create(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    gender=gender,
+                    role=role,
+                    password=make_password(password),
+                    id_number=id_number,
+                    region=region,
+                    is_approved=False,
+                )
 
-            Notification.objects.create(
-                user=user, message=f"New {role} registered: {username} - Pending approval"
-            )
+                # Send notification to admins about new account created
+                for admin in User.objects.filter(role__in=['ADMIN', 'SUPER_ADMIN']):
+                    Notification.objects.create(
+                        user=admin, message=f"New {role} account created: {username} - Pending approval"
+                    )
 
-            ActivityLog.objects.create(
-                user=request.user,
-                action="CREATE",
-                details=f"Created account for {username} ({role}) - ID: {id_number}",
-                ip_address=request.META.get("REMOTE_ADDR"),
-            )
+                ActivityLog.objects.create(
+                    user=request.user,
+                    action="CREATE",
+                    details=f"Created account for {username} ({role}) - ID: {id_number}",
+                    ip_address=request.META.get("REMOTE_ADDR"),
+                )
 
-            messages.success(request, f"Account for {username} created successfully")
-            return redirect("penro_create_account")
+                messages.success(request, f"Account for {username} created successfully. It is pending approval by the admin.")
+                return redirect("penro_create_account")
+            except Exception as e:
+                messages.error(request, f"Error creating account: {str(e)}")
+                return redirect("penro_create_account")
 
     return render(request, "PENRO/PENRO_create_account.html", {
         "notifications": notifications,
@@ -923,7 +1020,7 @@ def penro_reports(request):
         accepted_reports = accepted_reports.filter(report_date__lte=dto)
         declined_reports = declined_reports.filter(report_date__lte=dto)
 
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
     return render(
         request,
@@ -941,9 +1038,9 @@ def penro_reports(request):
 # ----------------- PENRO Activity Logs -----------------
 @login_required
 def penro_activity_logs(request):
-    notifications, unread_count = get_unread_notifications()
+    notifications, unread_count = get_unread_notifications(request)
 
-    logs_qs = ActivityLog.objects.all().select_related("user").order_by("-created_at")
+    logs_qs = ActivityLog.objects.filter(user__role__in=['CENRO', 'EVALUATOR']).select_related("user").order_by("-created_at")
 
     # Filters
     q = request.GET.get("q")

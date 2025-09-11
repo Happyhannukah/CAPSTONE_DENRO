@@ -12,7 +12,6 @@ urlpatterns = [
     path("", root_redirect, name="root"),
     # Auth
     path("login/", views.login_view, name="login"),
-    path("verify-2fa/", views.verify_2fa, name="verify_2fa"),
     path("logout/", views.logout_view, name="logout"),
     path("register/", views.register_view, name="register"),
     path("profile/", views.user_profile, name="user_profile"),
@@ -24,6 +23,7 @@ urlpatterns = [
     path("penro/reports/", views.penro_reports, name="penro_reports"),
     path("penro/activity-logs/", views.penro_activity_logs, name="penro_activity_logs"),
     path("cenro/dashboard/", views.cenro_dashboard, name="CENRO_dashboard"),
+    path("evaluator/dashboard/", views.evaluator_dashboard, name="evaluator_dashboard"),
     # CENRO sub-pages
     path("cenro/activitylogs/", views.cenro_activitylogs, name="CENRO_activitylogs"),
     path("cenro/reports/", views.cenro_reports, name="CENRO_reports"),

@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CENRO Reports</title>
+    <title>Reports</title>
     <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
     <style>
@@ -58,13 +58,17 @@
 </head>
 <body>
     <!-- Sidebar -->
+    {% if user.role == 'CENRO' %}
     {% include 'includes/sidenav/sidenav_cenro.html' %}
+    {% elif user.role == 'EVALUATOR' %}
+    {% include 'includes/sidenav/sidenav_evaluator.html' %}
+    {% endif %}
 
     <!-- Main Content -->
     <div class="content">
         <!-- Top Bar -->
         <div class="top-bar">
-            <h2>CENRO Reports</h2>
+            <h2>Reports</h2>
             <div class="notification">
                 <button id="notifBtn" class="bell-btn">
                     🔔 {% if unread_count > 0 %}
