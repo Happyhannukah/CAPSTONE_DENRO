@@ -679,7 +679,47 @@ def penro_dashboard(request):
 
 @login_required
 def cenro_dashboard(request):
-    return render(request, "CENRO/CENRO_dashboard.html")
+    stats = get_dashboard_stats()
+    users = get_recent_users()
+    notifications, unread_count = get_unread_notifications(request)
+
+    logs_qs = ActivityLog.objects.all().select_related("user").order_by("-created_at")
+
+    # Filters
+    q = request.GET.get("q")
+    role = request.GET.get("role")
+    action = request.GET.get("action")
+    dfrom = request.GET.get("from")
+    dto = request.GET.get("to")
+
+    if q:
+        logs_qs = logs_qs.filter(
+            Q(user__username__icontains=q) | Q(details__icontains=q) | Q(action__icontains=q)
+        )
+    if role:
+        logs_qs = logs_qs.filter(user__role=role)
+    if action:
+        logs_qs = logs_qs.filter(action=action)
+    if dfrom:
+        logs_qs = logs_qs.filter(created_at__date__gte=dfrom)
+    if dto:
+        logs_qs = logs_qs.filter(created_at__date__lte=dto)
+
+    paginator = Paginator(logs_qs, 20)
+    page_obj = paginator.get_page(request.GET.get("page") or 1)
+
+    return render(
+        request,
+        "CENRO/CENRO_dashboard.html",
+        {
+            "stats": stats,
+            "users": users,
+            "notifications": notifications,
+            "unread_count": unread_count,
+            "logs": page_obj.object_list,
+            "page_obj": page_obj,
+        },
+    )
 
 
 @login_required

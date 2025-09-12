@@ -105,6 +105,30 @@
 
       <!-- Activity Logs Section -->
       <div class="section-title">Activity Logs</div>
+      <div class="filters">
+        <form method="get">
+          <input type="text" name="q" placeholder="Search logs..." value="{{ request.GET.q }}">
+          <select name="role">
+            <option value="">All Roles</option>
+            <option value="ADMIN" {% if request.GET.role == 'ADMIN' %}selected{% endif %}>Admin</option>
+            <option value="PENRO" {% if request.GET.role == 'PENRO' %}selected{% endif %}>PENRO</option>
+            <option value="CENRO" {% if request.GET.role == 'CENRO' %}selected{% endif %}>CENRO</option>
+            <option value="EVALUATOR" {% if request.GET.role == 'EVALUATOR' %}selected{% endif %}>Evaluator</option>
+          </select>
+          <select name="action">
+            <option value="">All Actions</option>
+            <option value="LOGIN" {% if request.GET.action == 'LOGIN' %}selected{% endif %}>Login</option>
+            <option value="LOGOUT" {% if request.GET.action == 'LOGOUT' %}selected{% endif %}>Logout</option>
+            <option value="CREATE" {% if request.GET.action == 'CREATE' %}selected{% endif %}>Create</option>
+            <option value="UPDATE" {% if request.GET.action == 'UPDATE' %}selected{% endif %}>Update</option>
+            <option value="APPROVE" {% if request.GET.action == 'APPROVE' %}selected{% endif %}>Approve</option>
+            <option value="REJECT" {% if request.GET.action == 'REJECT' %}selected{% endif %}>Reject</option>
+          </select>
+          <input type="date" name="from" value="{{ request.GET.from }}">
+          <input type="date" name="to" value="{{ request.GET.to }}">
+          <button type="submit">Filter</button>
+        </form>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -130,6 +154,18 @@
             {% endfor %}
           </tbody>
         </table>
+        <!-- Pagination -->
+        <div class="pagination" style="text-align: center; margin-top: 20px;">
+          {% if page_obj.has_previous %}
+            <a href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.action %}&action={{ request.GET.action }}{% endif %}{% if request.GET.from %}&from={{ request.GET.from }}{% endif %}{% if request.GET.to %}&to={{ request.GET.to }}{% endif %}">&laquo; First</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.action %}&action={{ request.GET.action }}{% endif %}{% if request.GET.from %}&from={{ request.GET.from }}{% endif %}{% if request.GET.to %}&to={{ request.GET.to }}{% endif %}">Previous</a>
+          {% endif %}
+          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.action %}&action={{ request.GET.action }}{% endif %}{% if request.GET.from %}&from={{ request.GET.from }}{% endif %}{% if request.GET.to %}&to={{ request.GET.to }}{% endif %}">Next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.action %}&action={{ request.GET.action }}{% endif %}{% if request.GET.from %}&from={{ request.GET.from }}{% endif %}{% if request.GET.to %}&to={{ request.GET.to }}{% endif %}">Last &raquo;</a>
+          {% endif %}
+        </div>
       </div>
     </div>
 

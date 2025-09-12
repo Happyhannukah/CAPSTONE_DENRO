@@ -1,31 +1,44 @@
-{% extends "base.html" %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Templates — CENRO</title>
+    <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/cenro_excess.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    {% include 'includes/sidenav/sidenav_cenro.html' %}
 
-{% block title %}Templates — CENRO{% endblock %}
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <h2>Templates</h2>
+        </div>
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'styles/cenro_excess.css' %}">
-{% endblock %}
+        <section class="ctmpl panel">
+          <div class="ctmpl__header">
+            <h1 class="ctmpl__title">TEMPLATES</h1>
+            <a class="ctmpl__add">＋</a>
+          </div>
 
-{% block content %}
-<section class="ctmpl panel">
-  <div class="ctmpl__header">
-    <h1 class="ctmpl__title">TEMPLATES</h1>
-    <a class="ctmpl__add">＋</a>
-  </div>
+          <div class="ctmpl__grid">
+            <!-- Enumerator Form card is the trigger -->
+            <a href="#" class="ctmpl__card" id="openModalBtn">
+              <span class="ctmpl__card-title">Enumerators Form</span>
+              <button class="ctmpl__kebab" type="button" aria-label="More">⋮</button>
+            </a>
+          </div>
+        </section>
 
-  <div class="ctmpl__grid">
-    <!-- Enumerator Form card is the trigger -->
-    <a href="#" class="ctmpl__card" id="openModalBtn">
-      <span class="ctmpl__card-title">Enumerators Form</span>
-      <button class="ctmpl__kebab" type="button" aria-label="More">⋮</button>
-    </a>
-  </div>
-</section>
+        {# 👇 Correct partial path #}
+        {% include "CENRO/partials/enumerator_form.html" %}
+    </div>
 
-{# 👇 Correct partial path #}
-{% include "CENRO/partials/enumerator_form.html" %}
-
-<!-- External JS -->
-<script src="{% static 'js/scripts.js' %}"></script>
-{% endblock %}
+    <!-- External JS -->
+    <script src="{% static 'js/scripts.js' %}"></script>
+</body>
+</html>

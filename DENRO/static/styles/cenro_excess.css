@@ -5,7 +5,7 @@
   padding: 22px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  background: var(--panel);
+  background: #f8f9fa;
 }
 
 /* Header row */
@@ -171,7 +171,7 @@ body.modal-open { overflow: hidden; }
 
 .modal-content{
   width:min(720px, 96vw);
-  background:#fff;
+  background: var(--panel);
   border-radius:12px;
   box-shadow:0 24px 72px rgba(0,0,0,.28);
   overflow:hidden;
