@@ -48,6 +48,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "DENRO.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -73,6 +74,8 @@ TEMPLATES = [
 WSGI_APPLICATION = "CAPSTONE_DENRO.wsgi.application"
 
 AUTH_USER_MODEL = "DENRO.User"
+
+LOGIN_URL = '/login/'
 
 
 # Database
@@ -143,3 +146,6 @@ GOOGLE_STATIC_MAPS_KEY = config('GOOGLE_STATIC_MAPS_KEY')
 
 # Mapbox API Token
 MAPBOX_TOKEN = config('MAPBOX_TOKEN', default='sk.eyJ1IjoiY2Fwc3RvbmUtZGVucm8iLCJhIjoiY21mM3JvMTIxMDE0aDJpc2c5eW9jOTAxbSJ9.mKKeeW21OUkqBalJeLRWRQ')
+
+# CSRF Failure View
+CSRF_FAILURE_VIEW = 'DENRO.views.csrf_failure'

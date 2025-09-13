@@ -18,6 +18,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+handler403 = 'DENRO.views.forbidden_view'
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("DENRO.urls")),

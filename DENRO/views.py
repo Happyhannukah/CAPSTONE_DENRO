@@ -14,6 +14,7 @@ from django.contrib.auth.hashers import make_password
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.utils.timezone import now
+from django.views.decorators.cache import cache_control
 
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -79,6 +80,22 @@ def register_view(request):
 # ----------------- Approve Users -----------------
 def is_admin(user):
     return getattr(user, "role", None) in ("ADMIN", "SUPER_ADMIN")
+
+
+def is_superadmin(user):
+    return getattr(user, "role", None) == "SUPER_ADMIN"
+
+
+def is_penro(user):
+    return getattr(user, "role", None) == "PENRO"
+
+
+def is_cenro(user):
+    return getattr(user, "role", None) == "CENRO"
+
+
+def is_evaluator(user):
+    return getattr(user, "role", None) == "EVALUATOR"
 
 
 @user_passes_test(is_admin)
@@ -667,12 +684,16 @@ def admin_activity_logs(request):
 
 # ----------------- Dashboards -----------------
 @login_required
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@user_passes_test(is_superadmin)
 def superadmin_dashboard(request):
     users = User.objects.all()
     return render(request, "SUPER_ADMIN/SA_dashboard.html", {"users": users})
 
 
 @login_required
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@user_passes_test(is_penro)
 def penro_dashboard(request):
     stats = get_dashboard_stats()
     users = User.objects.filter(role__in=['PENRO', 'EVALUATOR'], last_login__isnull=False).order_by('-last_login')[:5]
@@ -769,6 +790,8 @@ def penro_dashboard(request):
 
 
 @login_required
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@user_passes_test(is_cenro)
 def cenro_dashboard(request):
     stats = get_dashboard_stats()
     users = User.objects.filter(role__in=['CENRO', 'EVALUATOR'], last_login__isnull=False).order_by('-last_login')[:5]
@@ -865,6 +888,8 @@ def cenro_dashboard(request):
 
 
 @login_required
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@user_passes_test(is_evaluator)
 def evaluator_dashboard(request):
     stats = get_dashboard_stats()
     users = User.objects.filter(role__in=['CENRO', 'EVALUATOR'], last_login__isnull=False).order_by('-last_login')[:5]
@@ -933,6 +958,7 @@ def evaluator_dashboard(request):
 
 
 @login_required
+@user_passes_test(is_cenro)
 def cenro_activitylogs(request):
     notifications, unread_count = get_unread_notifications(request)
 
@@ -1458,3 +1484,35 @@ def update_location(request):
 def welcome_api(request):
     logging.info(f"Request received: {request.method} {request.path}")
     return JsonResponse({"message": "Welcome to DENRO API!"})
+
+
+# ----------------- CSRF Failure -----------------
+def csrf_failure(request, reason=""):
+    return render(request, '403.html', status=403)
+
+
+# ----------------- Forbidden Access -----------------
+def forbidden_view(request, exception=None):
+    response = render(request, '403.html', status=403)
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response
+
+
+# ----------------- Forbidden Access -----------------
+def forbidden_view(request, exception=None):
+    response = render(request, '403.html', status=403)
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response
+
+
+# ----------------- Forbidden Access -----------------
+def forbidden_view(request, exception=None):
+    response = render(request, '403.html', status=403)
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response

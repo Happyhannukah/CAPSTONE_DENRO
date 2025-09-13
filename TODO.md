@@ -1,6 +1,3 @@
-# TODO: Add Map to PENRO Reports Page for Last Login Locations
-
-- [x] Add Leaflet CSS and JS to PENRO_reports.html head
-- [x] Add map div after CENRO Last Login Locations table in PENRO_reports.html
-- [x] Add JavaScript to initialize map with markers for CENRO locations and PENRO's own location
-- [x] Test the changes by running Django server and verifying the map displays correctly
+- [x] Add forbidden_view to DENRO/views.py
+- [x] Set handler403 in CAPSTONE_DENRO/urls.py
+- [x] Add /forbidden/ URL in DENRO/urls.py for testing

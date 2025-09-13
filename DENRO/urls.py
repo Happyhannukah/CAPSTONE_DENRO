@@ -43,6 +43,7 @@ urlpatterns = [
     path("change-password/", views.change_password, name="change_password"),
     path("api/welcome/", views.welcome_api, name="welcome_api"),
     path("api/update-location/", views.update_location, name="update_location"),
+    path("forbidden/", views.forbidden_view, name="forbidden"),
 
 
 
