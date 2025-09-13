@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   </head>
   <body>
     <!-- Sidebar -->
@@ -73,12 +77,11 @@
           <canvas id="reportStatusChart" data-pending="{{ stats.pending_reports|default:0 }}" data-accepted="{{ stats.accepted_reports|default:0 }}" data-declined="{{ stats.declined_reports|default:0 }}"></canvas>
         </div>
         <div class="chart-container">
-          <h3>User Locations</h3>
-          {% if map_url %}
-          <img src="{{ map_url }}" alt="User Locations Map" style="width:100%; height:auto; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-          <p style="display:none; color:red;">Failed to load map. Please check your Google Maps API key and ensure 'localhost' is in the allowed referrers.</p>
+          <h3>Your Last Login Location</h3>
+          {% if user_location %}
+          <div id="map" style="height: 300px; width: 100%;"></div>
           {% else %}
-          <p>No user locations to display</p>
+          <p>No location data available</p>
           {% endif %}
         </div>
       </div>
@@ -140,5 +143,20 @@
 
     <!-- JS -->
     <script src="{% static 'js/admin_dashboard.js' %}"></script>
+    {% if user_location %}
+    <script>
+      // Initialize map
+      var map = L.map('map').setView([{{ user_location.lat }}, {{ user_location.lon }}], 13);
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Add marker for user location
+      var marker = L.marker([{{ user_location.lat }}, {{ user_location.lon }}]).addTo(map);
+      marker.bindPopup('<b>Your Last Login Location</b><br>Last Update: {{ user_location.last_update|date:"M d, Y H:i" }}');
+    </script>
+    {% endif %}
   </body>
 </html>

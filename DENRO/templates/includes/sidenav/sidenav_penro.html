@@ -1,10 +1,11 @@
+{% load static %}
 <!-- Sidebar -->
 <div class="sidebar">
-  <h2>DENRO</h2>
-  <a href="{% url 'PENRO_dashboard' %}">Dashboard</a>
-  <a href="{% url 'penro_create_account' %}">Account Creation</a>
-  <a href="{% url 'penro_reports' %}">Reports</a>
-  <a href="{% url 'penro_activity_logs' %}">Activity Logs</a>
-  <a href="{% url 'user_profile' %}">Profile</a>
-  <a href="{% url 'logout' %}">Logout</a>
+  <img src="{% static 'images/Logo.png' %}" alt="DENRO Logo" class="sidebar-logo">
+  <a href="{% url 'PENRO_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+  <a href="{% url 'penro_create_account' %}"><i class="fas fa-user-plus"></i> Account Creation</a>
+  <a href="{% url 'penro_reports' %}"><i class="fas fa-file-alt"></i> Reports</a>
+  <a href="{% url 'penro_activity_logs' %}"><i class="fas fa-list"></i> Activity Logs</a>
+  <a href="{% url 'user_profile' %}"><i class="fas fa-user"></i> Profile</a>
+  <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
 </div>

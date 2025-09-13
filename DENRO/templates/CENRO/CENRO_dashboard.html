@@ -4,9 +4,13 @@
   <head>
     <meta charset="UTF-8" />
     <title>CENRO Dashboard</title>
-    <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}" />
+  <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   </head>
   <body>
     <!-- Sidebar -->
@@ -73,8 +77,8 @@
           <canvas id="reportStatusChart" data-pending="{{ stats.pending_reports|default:0 }}" data-accepted="{{ stats.accepted_reports|default:0 }}" data-declined="{{ stats.declined_reports|default:0 }}"></canvas>
         </div>
         <div class="chart-container">
-          <h3>Account Status</h3>
-          <canvas id="accountStatusChart" data-approved="{{ stats.approved_users|default:0 }}" data-pending="{{ stats.pending_users|default:0 }}" data-rejected="{{ stats.rejected_users|default:0 }}" data-deactivated="{{ stats.deactivated_users|default:0 }}"></canvas>
+          <h3>CENRO and Evaluator Last Login Locations (Including Yours)</h3>
+          <div id="map" style="height: 300px; width: 100%;"></div>
         </div>
       </div>
 
@@ -171,5 +175,26 @@
 
     <!-- JS -->
     <script src="{% static 'js/admin_dashboard.js' %}"></script>
+    <script>
+      // Initialize map
+      var map = L.map('map').setView([10.3157, 123.8854], 8); // Center on Region 7 (Central Visayas)
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Add markers for user locations
+      {% for location in user_locations %}
+        var marker = L.marker([{{ location.lat }}, {{ location.lon }}]).addTo(map);
+        marker.bindPopup('<b>{{ location.username }}</b><br>Role: {{ location.role }}<br>Last Update: {{ location.last_update|date:"M d, Y H:i" }}');
+      {% endfor %}
+
+      // Add marker for current user location
+      {% if current_user_location %}
+        var currentMarker = L.marker([{{ current_user_location.lat }}, {{ current_user_location.lon }}], {icon: L.icon({iconUrl: '{% static 'images/Logo.png' %}', iconSize: [25, 25]})}).addTo(map);
+        currentMarker.bindPopup('<b>You ({{ user.username }})</b><br>Last Update: {{ current_user_location.last_update|date:"M d, Y H:i" }}');
+      {% endif %}
+    </script>
   </body>
 </html>

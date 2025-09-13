@@ -1,5 +1,6 @@
-- [x] Update DENRO/templates/includes/sidenav/sidenav_cenro.html to replace "DENRO" text with logo image
-- [x] Update DENRO/static/styles/sidebar.css to add .sidebar-logo styling for 20px size
-- [x] Create DENRO/templates/includes/sidenav/sidenav_cenro.html with CENRO navigation links
-- [x] Update cenro_dashboard view to provide stats, users, logs, notifications, and filters
-- [x] Enhance CENRO_dashboard.html with filters and pagination for activity logs
+# TODO: Add Map to PENRO Reports Page for Last Login Locations
+
+- [x] Add Leaflet CSS and JS to PENRO_reports.html head
+- [x] Add map div after CENRO Last Login Locations table in PENRO_reports.html
+- [x] Add JavaScript to initialize map with markers for CENRO locations and PENRO's own location
+- [x] Test the changes by running Django server and verifying the map displays correctly

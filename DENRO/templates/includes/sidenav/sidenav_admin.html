@@ -1,12 +1,15 @@
+{% load static %}
 <!-- templates/includes/sidenav/sidenav_admin.html -->
 <aside class="sidenav">
   <div class="sidenav__header">
-    <div class="avatar">AD</div>
+    <img src="{% static 'images/Logo.png' %}" alt="DENRO Logo" class="avatar">
     <div class="title">ADMIN</div>
   </div>
   <ul class="sidenav__menu">
     <!-- <li><a href="{% url 'Admin-dashboard' %}">Dashboard</a></li> -->
-    <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+    <li><a href="{% url 'admin_dashboard' %}">
+    <i class="fas fa-tachometer-alt"></i>
+    Dashboard</a></li>
 
     <li><a href="{% url 'user_profile' %}">
     <i class="fas fa-user"></i>
@@ -15,8 +18,12 @@
     <li><a href="{% url 'admin_activitylogs' %}">
     <i class="fas fa-list"></i>
     Activity Logs</a></li>
-    <li><a href="{% url 'approve_users' %}">User Accounts</a></li>
-    <li><a href="{% url 'admin_reports' %}">Reports</a></li>
+    <li><a href="{% url 'approve_users' %}">
+    <i class="fas fa-users"></i>
+    User Accounts</a></li>
+    <li><a href="{% url 'admin_reports' %}">
+    <i class="fas fa-file-alt"></i>
+    Reports</a></li>
   </ul>
   <div class="sidenav__footer">
     <a href="{% url 'logout' %}">Logout</a>

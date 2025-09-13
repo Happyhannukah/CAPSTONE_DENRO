@@ -236,6 +236,32 @@ def admin_reports(request):
         accepted_reports = accepted_reports.filter(report_date__lte=dto)
         declined_reports = declined_reports.filter(report_date__lte=dto)
 
+    # Get last login locations for CENRO users
+    cenro_users = User.objects.filter(role='CENRO', is_approved=True, is_deactivated=False)
+    cenro_locations = []
+    for user in cenro_users:
+        last_location_log = ActivityLog.objects.filter(
+            user=user, action='LOCATION_UPDATE'
+        ).order_by('-created_at').first()
+        if last_location_log and last_location_log.details:
+            try:
+                parts = last_location_log.details.split(': ')
+                if len(parts) == 2:
+                    coords = parts[1].split(', ')
+                    if len(coords) == 2:
+                        lat = float(coords[0])
+                        lon = float(coords[1])
+                        cenro_locations.append({
+                            'id': user.id,
+                            'username': user.username,
+                            'role': user.role,
+                            'lat': lat,
+                            'lon': lon,
+                            'last_update': last_location_log.created_at,
+                        })
+            except ValueError:
+                pass
+
     notifications, unread_count = get_unread_notifications(request)
 
     return render(
@@ -349,6 +375,13 @@ def login_view(request):
                 details=f"Logged in from {request.META.get('REMOTE_ADDR', 'unknown')}",
                 ip_address=request.META.get("REMOTE_ADDR"),
             )
+            # Log location update on login (default to Cebu coordinates if no location provided)
+            ActivityLog.objects.create(
+                user=user,
+                action="LOCATION_UPDATE",
+                details="Location updated: 10.3157, 123.8854",  # Default Cebu coordinates
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
 
             # Redirect based on role
             if user.role == "SUPER_ADMIN":
@@ -386,6 +419,13 @@ def verify_2fa(request):
                 user=user,
                 action="LOGIN",
                 details=f"Logged in from {request.META.get('REMOTE_ADDR', 'unknown')}",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
+            # Log location update on login (default to Cebu coordinates if no location provided)
+            ActivityLog.objects.create(
+                user=user,
+                action="LOCATION_UPDATE",
+                details="Location updated: 10.3157, 123.8854",  # Default Cebu coordinates
                 ip_address=request.META.get("REMOTE_ADDR"),
             )
             # Clear session
@@ -635,10 +675,59 @@ def superadmin_dashboard(request):
 @login_required
 def penro_dashboard(request):
     stats = get_dashboard_stats()
-    users = User.objects.filter(role__in=['CENRO', 'EVALUATOR'], last_login__isnull=False).order_by('-last_login')[:5]
+    users = User.objects.filter(role__in=['PENRO', 'EVALUATOR'], last_login__isnull=False).order_by('-last_login')[:5]
     notifications, unread_count = get_unread_notifications(request)
 
-    logs_qs = ActivityLog.objects.filter(user__role__in=['CENRO', 'EVALUATOR']).select_related("user").order_by("-created_at")
+    # Get last login locations for PENRO and EVALUATOR (excluding current user)
+    penro_evaluator_users = User.objects.filter(role__in=['PENRO', 'EVALUATOR'], is_approved=True, is_deactivated=False).exclude(id=request.user.id)
+    user_locations = []
+    for user in penro_evaluator_users:
+        last_location_log = ActivityLog.objects.filter(
+            user=user, action='LOCATION_UPDATE'
+        ).order_by('-created_at').first()
+        if last_location_log and last_location_log.details:
+            # Parse "Location updated: lat, lon"
+            try:
+                parts = last_location_log.details.split(': ')
+                if len(parts) == 2:
+                    coords = parts[1].split(', ')
+                    if len(coords) == 2:
+                        lat = float(coords[0])
+                        lon = float(coords[1])
+                        user_locations.append({
+                            'id': user.id,
+                            'username': user.username,
+                            'role': user.role,
+                            'lat': lat,
+                            'lon': lon,
+                            'last_update': last_location_log.created_at,
+                        })
+            except ValueError:
+                pass
+
+    # Get current user's last location
+    current_user_location = None
+    last_location_log = ActivityLog.objects.filter(
+        user=request.user, action='LOCATION_UPDATE'
+    ).order_by('-created_at').first()
+    if last_location_log and last_location_log.details:
+        # Parse "Location updated: lat, lon"
+        try:
+            parts = last_location_log.details.split(': ')
+            if len(parts) == 2:
+                coords = parts[1].split(', ')
+                if len(coords) == 2:
+                    lat = float(coords[0])
+                    lon = float(coords[1])
+                    current_user_location = {
+                        'lat': lat,
+                        'lon': lon,
+                        'last_update': last_location_log.created_at,
+                    }
+        except ValueError:
+            pass
+
+    logs_qs = ActivityLog.objects.filter(user__role__in=['PENRO', 'EVALUATOR']).select_related("user").order_by("-created_at")
 
     # Filters
     q = request.GET.get("q")
@@ -669,6 +758,8 @@ def penro_dashboard(request):
         {
             "stats": stats,
             "users": users,
+            "user_locations": user_locations,
+            "current_user_location": current_user_location,
             "notifications": notifications,
             "unread_count": unread_count,
             "logs": page_obj.object_list,
@@ -680,10 +771,59 @@ def penro_dashboard(request):
 @login_required
 def cenro_dashboard(request):
     stats = get_dashboard_stats()
-    users = get_recent_users()
+    users = User.objects.filter(role__in=['CENRO', 'EVALUATOR'], last_login__isnull=False).order_by('-last_login')[:5]
     notifications, unread_count = get_unread_notifications(request)
 
-    logs_qs = ActivityLog.objects.all().select_related("user").order_by("-created_at")
+    # Get last login locations for CENRO and EVALUATOR (excluding current user)
+    cenro_evaluator_users = User.objects.filter(role__in=['CENRO', 'EVALUATOR'], is_approved=True, is_deactivated=False).exclude(id=request.user.id)
+    user_locations = []
+    for user in cenro_evaluator_users:
+        last_location_log = ActivityLog.objects.filter(
+            user=user, action='LOCATION_UPDATE'
+        ).order_by('-created_at').first()
+        if last_location_log and last_location_log.details:
+            # Parse "Location updated: lat, lon"
+            try:
+                parts = last_location_log.details.split(': ')
+                if len(parts) == 2:
+                    coords = parts[1].split(', ')
+                    if len(coords) == 2:
+                        lat = float(coords[0])
+                        lon = float(coords[1])
+                        user_locations.append({
+                            'id': user.id,
+                            'username': user.username,
+                            'role': user.role,
+                            'lat': lat,
+                            'lon': lon,
+                            'last_update': last_location_log.created_at,
+                        })
+            except ValueError:
+                pass
+
+    # Get current user's last location
+    current_user_location = None
+    last_location_log = ActivityLog.objects.filter(
+        user=request.user, action='LOCATION_UPDATE'
+    ).order_by('-created_at').first()
+    if last_location_log and last_location_log.details:
+        # Parse "Location updated: lat, lon"
+        try:
+            parts = last_location_log.details.split(': ')
+            if len(parts) == 2:
+                coords = parts[1].split(', ')
+                if len(coords) == 2:
+                    lat = float(coords[0])
+                    lon = float(coords[1])
+                    current_user_location = {
+                        'lat': lat,
+                        'lon': lon,
+                        'last_update': last_location_log.created_at,
+                    }
+        except ValueError:
+            pass
+
+    logs_qs = ActivityLog.objects.filter(user__role='EVALUATOR').select_related("user").order_by("-created_at")
 
     # Filters
     q = request.GET.get("q")
@@ -714,6 +854,8 @@ def cenro_dashboard(request):
         {
             "stats": stats,
             "users": users,
+            "user_locations": user_locations,
+            "current_user_location": current_user_location,
             "notifications": notifications,
             "unread_count": unread_count,
             "logs": page_obj.object_list,
@@ -724,43 +866,31 @@ def cenro_dashboard(request):
 
 @login_required
 def evaluator_dashboard(request):
-    from django.conf import settings
     stats = get_dashboard_stats()
     users = User.objects.filter(role__in=['CENRO', 'EVALUATOR'], last_login__isnull=False).order_by('-last_login')[:5]
     notifications, unread_count = get_unread_notifications(request)
 
-    # Region coordinates for Philippines
-    region_coords = {
-        'Region 1': '16.6167,120.3167',  # Ilocos
-        'Region 2': '15.4827,120.7120',  # Cagayan Valley
-        'Region 3': '14.9547,120.8989',  # Central Luzon
-        'Region 4A': '14.5995,121.0359',  # Calabarzon
-        'Region 4B': '13.7565,121.0583',  # Mimaropa
-        'Region 5': '13.4214,123.4137',  # Bicol
-        'Region 6': '10.7202,122.5621',  # Western Visayas
-        'Region 7': '10.3157,123.8854',  # Central Visayas
-        'Region 8': '11.2476,125.0020',  # Eastern Visayas
-        'Region 9': '8.1541,123.2588',  # Zamboanga Peninsula
-        'Region 10': '8.0202,124.6857',  # Northern Mindanao
-        'Region 11': '7.3042,126.0893',  # Davao
-        'Region 12': '6.5039,124.8460',  # Soccsksargen
-        'Region 13': '9.8432,126.1420',  # Caraga
-        'NCR': '14.5995,120.9842',  # Metro Manila
-        'CAR': '16.4023,120.5960',  # Cordillera
-        'BARMM': '6.5667,121.9833',  # Bangsamoro
-    }
-
-    # Get current user's region
-    user_region = request.user.region
-    if user_region and user_region in region_coords:
-        user_coords = region_coords[user_region]
-        map_url = f"https://maps.googleapis.com/maps/api/staticmap?center={user_coords}&zoom=8&size=400x300&markers=color:red|label:You|{user_coords}&key={settings.GOOGLE_STATIC_MAPS_KEY}"
-    else:
-        # Default to Philippines center if no region or invalid region
-        map_url = f"https://maps.googleapis.com/maps/api/staticmap?center=12.8797,121.7740&zoom=6&size=400x300&key={settings.GOOGLE_STATIC_MAPS_KEY}"
-
-    # Log the map_url for debugging
-    logging.info(f"Generated map_url: {map_url}")
+    # Get current user's last location
+    user_location = None
+    last_location_log = ActivityLog.objects.filter(
+        user=request.user, action='LOCATION_UPDATE'
+    ).order_by('-created_at').first()
+    if last_location_log and last_location_log.details:
+        # Parse "Location updated: lat, lon"
+        try:
+            parts = last_location_log.details.split(': ')
+            if len(parts) == 2:
+                coords = parts[1].split(', ')
+                if len(coords) == 2:
+                    lat = float(coords[0])
+                    lon = float(coords[1])
+                    user_location = {
+                        'lat': lat,
+                        'lon': lon,
+                        'last_update': last_location_log.created_at,
+                    }
+        except ValueError:
+            pass
 
     logs_qs = ActivityLog.objects.filter(user__role__in=['CENRO', 'EVALUATOR']).select_related("user").order_by("-created_at")
 
@@ -797,7 +927,7 @@ def evaluator_dashboard(request):
             "unread_count": unread_count,
             "logs": page_obj.object_list,
             "page_obj": page_obj,
-            "map_url": map_url,
+            "user_location": user_location,
         },
     )
 
@@ -919,6 +1049,58 @@ def cenro_reports(request):
         accepted_reports = accepted_reports.filter(report_date__lte=dto)
         declined_reports = declined_reports.filter(report_date__lte=dto)
 
+    # Get last login locations for CENRO users
+    cenro_users = User.objects.filter(role='CENRO', is_approved=True, is_deactivated=False)
+    cenro_locations = []
+    for user in cenro_users:
+        last_location_log = ActivityLog.objects.filter(
+            user=user, action='LOCATION_UPDATE'
+        ).order_by('-created_at').first()
+        if last_location_log and last_location_log.details:
+            try:
+                parts = last_location_log.details.split(': ')
+                if len(parts) == 2:
+                    coords = parts[1].split(', ')
+                    if len(coords) == 2:
+                        lat = float(coords[0])
+                        lon = float(coords[1])
+                        cenro_locations.append({
+                            'id': user.id,
+                            'username': user.username,
+                            'role': user.role,
+                            'lat': lat,
+                            'lon': lon,
+                            'last_update': last_location_log.created_at,
+                        })
+            except ValueError:
+                pass
+
+    # Get last login locations for CENRO and EVALUATOR (excluding current user)
+    cenro_evaluator_users = User.objects.filter(role__in=['CENRO', 'EVALUATOR'], is_approved=True, is_deactivated=False).exclude(id=request.user.id)
+    user_locations = []
+    for user in cenro_evaluator_users:
+        last_location_log = ActivityLog.objects.filter(
+            user=user, action='LOCATION_UPDATE'
+        ).order_by('-created_at').first()
+        if last_location_log and last_location_log.details:
+            try:
+                parts = last_location_log.details.split(': ')
+                if len(parts) == 2:
+                    coords = parts[1].split(', ')
+                    if len(coords) == 2:
+                        lat = float(coords[0])
+                        lon = float(coords[1])
+                        user_locations.append({
+                            'id': user.id,
+                            'username': user.username,
+                            'role': user.role,
+                            'lat': lat,
+                            'lon': lon,
+                            'last_update': last_location_log.created_at,
+                        })
+            except ValueError:
+                pass
+
     notifications, unread_count = get_unread_notifications(request)
 
     return render(
@@ -928,6 +1110,7 @@ def cenro_reports(request):
             "pending_reports": pending_reports,
             "accepted_reports": accepted_reports,
             "declined_reports": declined_reports,
+            "user_locations": user_locations,
             "notifications": notifications,
             "unread_count": unread_count,
         },
@@ -1063,6 +1246,53 @@ def penro_reports(request):
         accepted_reports = accepted_reports.filter(report_date__lte=dto)
         declined_reports = declined_reports.filter(report_date__lte=dto)
 
+    # Get last login locations for CENRO users
+    cenro_users = User.objects.filter(role='CENRO', is_approved=True, is_deactivated=False)
+    cenro_locations = []
+    for user in cenro_users:
+        last_location_log = ActivityLog.objects.filter(
+            user=user, action='LOCATION_UPDATE'
+        ).order_by('-created_at').first()
+        if last_location_log and last_location_log.details:
+            try:
+                parts = last_location_log.details.split(': ')
+                if len(parts) == 2:
+                    coords = parts[1].split(', ')
+                    if len(coords) == 2:
+                        lat = float(coords[0])
+                        lon = float(coords[1])
+                        cenro_locations.append({
+                            'id': user.id,
+                            'username': user.username,
+                            'role': user.role,
+                            'lat': lat,
+                            'lon': lon,
+                            'last_update': last_location_log.created_at,
+                        })
+            except ValueError:
+                pass
+
+    # Get current user's last location
+    current_user_location = None
+    last_location_log = ActivityLog.objects.filter(
+        user=request.user, action='LOCATION_UPDATE'
+    ).order_by('-created_at').first()
+    if last_location_log and last_location_log.details:
+        try:
+            parts = last_location_log.details.split(': ')
+            if len(parts) == 2:
+                coords = parts[1].split(', ')
+                if len(coords) == 2:
+                    lat = float(coords[0])
+                    lon = float(coords[1])
+                    current_user_location = {
+                        'lat': lat,
+                        'lon': lon,
+                        'last_update': last_location_log.created_at,
+                    }
+        except ValueError:
+            pass
+
     notifications, unread_count = get_unread_notifications(request)
 
     return render(
@@ -1072,6 +1302,8 @@ def penro_reports(request):
             "pending_reports": pending_reports,
             "accepted_reports": accepted_reports,
             "declined_reports": declined_reports,
+            "cenro_locations": cenro_locations,
+            "current_user_location": current_user_location,
             "notifications": notifications,
             "unread_count": unread_count,
         },

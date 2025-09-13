@@ -1,10 +1,11 @@
+{% load static %}
 <!-- Sidebar -->
 <div class="sidebar">
-  <h2>DENRO</h2>
-  <a href="{% url 'CENRO_dashboard' %}">Dashboard</a>
-  <a href="{% url 'CENRO_reports' %}">Reports</a>
-  <a href="{% url 'CENRO_activitylogs' %}">Activity Logs</a>
-  <a href="{% url 'CENRO_templates' %}">Templates</a>
-  <a href="{% url 'user_profile' %}">Profile</a>
-  <a href="{% url 'logout' %}">Logout</a>
+  <img src="{% static 'images/Logo.png' %}" alt="DENRO Logo" class="sidebar-logo">
+  <a href="{% url 'CENRO_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+  <a href="{% url 'CENRO_reports' %}"><i class="fas fa-file-alt"></i> Reports</a>
+  <a href="{% url 'CENRO_activitylogs' %}"><i class="fas fa-list"></i> Activity Logs</a>
+  <a href="{% url 'CENRO_templates' %}"><i class="fas fa-file"></i> Templates</a>
+  <a href="{% url 'user_profile' %}"><i class="fas fa-user"></i> Profile</a>
+  <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
 </div>
