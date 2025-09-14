@@ -159,6 +159,25 @@
         var currentMarker = L.marker([{{ current_user_location.lat }}, {{ current_user_location.lon }}], {icon: L.icon({iconUrl: '{% static 'images/Logo.png' %}', iconSize: [25, 25]})}).addTo(map);
         currentMarker.bindPopup('<b>You ({{ user.username }})</b><br>Last Update: {{ current_user_location.last_update|date:"M d, Y H:i" }}');
       {% endif %}
+
+      // Add latitude and longitude control
+      var latlngControl = L.control({position: 'bottomleft'});
+      latlngControl.onAdd = function(map) {
+        var div = L.DomUtil.create('div', 'latlng-control');
+        div.style.background = 'white';
+        div.style.padding = '5px';
+        div.style.border = '1px solid #ccc';
+        div.style.borderRadius = '4px';
+        div.innerHTML = 'Lat: -, Lng: -';
+        return div;
+      };
+      latlngControl.addTo(map);
+
+      map.on('mousemove', function(e) {
+        var lat = e.latlng.lat.toFixed(5);
+        var lng = e.latlng.lng.toFixed(5);
+        document.querySelector('.latlng-control').innerHTML = 'Lat: ' + lat + ', Lng: ' + lng;
+      });
     </script>
   </body>
 </html>

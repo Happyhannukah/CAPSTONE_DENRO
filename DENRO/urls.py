@@ -42,6 +42,7 @@ urlpatterns = [
     path("cenro/activitylogs/", views.cenro_activitylogs, name="CENRO_activitylogs"),
     path("change-password/", views.change_password, name="change_password"),
     path("api/welcome/", views.welcome_api, name="welcome_api"),
+    path("api/login/", views.api_login, name="api_login"),
     path("api/update-location/", views.update_location, name="update_location"),
     path("forbidden/", views.forbidden_view, name="forbidden"),
 

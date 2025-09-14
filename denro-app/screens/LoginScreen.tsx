@@ -4,8 +4,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Dimensions, Alert, ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { supabase } from '@/utils/supabase';
-import { saveUser, DenroUser } from '../utils/session';
+import { saveUser, saveToken, DenroUser } from '../utils/session';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -22,22 +21,27 @@ export default function LoginScreen() {
     try {
       setLoading(true);
 
-      // Call your RPC
-      const { data, error } = await supabase.rpc('auth_login', {
-        p_username: username.trim(),
-        p_password: password,
+      // Call Django API
+      const response = await fetch('http://localhost:8000/api/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: username.trim(),
+          password: password,
+        }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
 
-      const row = (data as DenroUser[] | null)?.[0];
-      if (!row) {
-        Alert.alert('Login failed', 'Invalid username or password.');
-        return;
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
       }
 
       // Save to local session
-      await saveUser(row);
+      await saveUser(data.user);
+      await saveToken(data.token);
 
       // Go to your app (home or dashboard)
       router.replace('/home');

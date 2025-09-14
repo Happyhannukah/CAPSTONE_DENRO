@@ -16,15 +16,19 @@ from django.db.models import Q, Count
 from django.utils.timezone import now
 from django.views.decorators.cache import cache_control
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
 
 from .models import User, Notification, ActivityLog, EnumeratorsReport
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-from .serializers import UserSerializer
+from .serializers import UserSerializer, LoginSerializer
 from .permissions import IsSuperAdmin, IsAdminOrSuperAdmin
 
 
@@ -1484,6 +1488,40 @@ def update_location(request):
 def welcome_api(request):
     logging.info(f"Request received: {request.method} {request.path}")
     return JsonResponse({"message": "Welcome to DENRO API!"})
+
+
+# ----------------- Login API -----------------
+@api_view(['POST'])
+@permission_classes([])
+def api_login(request):
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+        user = authenticate(username=username, password=password)
+        if user:
+            if not user.is_approved:
+                return Response({"error": "Account pending approval"}, status=status.HTTP_403_FORBIDDEN)
+            if user.is_rejected:
+                return Response({"error": "Account rejected"}, status=status.HTTP_403_FORBIDDEN)
+            if user.is_deactivated:
+                return Response({"error": "Account deactivated"}, status=status.HTTP_403_FORBIDDEN)
+
+            token, created = Token.objects.get_or_create(user=user)
+            user_serializer = UserSerializer(user)
+            ActivityLog.objects.create(
+                user=user,
+                action="LOGIN",
+                details=f"Logged in via API from {request.META.get('REMOTE_ADDR', 'unknown')}",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
+            return Response({
+                "token": token.key,
+                "user": user_serializer.data
+            })
+        else:
+            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # ----------------- CSRF Failure -----------------
