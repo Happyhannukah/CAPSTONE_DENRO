@@ -1,21 +1,6 @@
-# Task: Add Longitude and Latitude to All Leaflet Maps
-
-## Overview
-Add latitude and longitude display controls to all Leaflet maps in the project. The maps are located in the following templates:
-- DENRO/templates/CENRO/CENRO_dashboard.html
-- DENRO/templates/PENRO/PENRO_dashboard.html
-- DENRO/templates/EVALUATOR/EVALUATOR_dashboard.html
-- DENRO/templates/PENRO/PENRO_reports.html
-
-## Plan
-- [x] Add lat/lng control to CENRO_dashboard.html map
-- [x] Add lat/lng control to PENRO_dashboard.html map
-- [x] Add lat/lng control to EVALUATOR_dashboard.html map
-- [x] Add lat/lng control to PENRO_reports.html map
-
-## Implementation Details
-For each map, add a control in the bottom-left corner that displays the current mouse position's latitude and longitude. Update the display on map mousemove events.
-
-## Followup Steps
-- Test the maps to ensure lat/lng display works correctly
-- Verify no conflicts with existing map functionality
+- [x] Modify DENRO/templates/CENRO/partials/enumerator_form.html to split the form into 3 steps
+  - [x] Add step indicator (e.g., Step 1 of 3)
+  - [x] Wrap sections into step divs: Step 1 (Basic Info + Establishment), Step 2 (Permits), Step 3 (Documentation + Signatures)
+  - [x] Update modal-footer with Previous/Next/Submit buttons
+  - [x] Add JavaScript for step navigation and validation
+- [ ] Test the form to ensure submission works

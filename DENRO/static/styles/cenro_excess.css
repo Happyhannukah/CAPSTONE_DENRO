@@ -219,3 +219,128 @@ body.modal-open { overflow: hidden; }
   from{ opacity:0; transform:translateY(4px); }
   to{ opacity:1; transform:translateY(0); }
 }
+
+/* ===== Enhanced Form Styles ===== */
+.form-section{
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(255,255,255,.05);
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+.section-title{
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+  border-bottom: 2px solid var(--bg-2);
+  padding-bottom: 8px;
+}
+
+.form-input, .form-textarea{
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.form-input:focus, .form-textarea:focus{
+  outline: none;
+  border-color: var(--bg-2);
+  box-shadow: 0 0 0 3px rgba(25, 201, 159, .1);
+}
+
+.form-input.small{
+  width: auto;
+  min-width: 120px;
+  margin-right: 8px;
+}
+
+.form-textarea{
+  resize: vertical;
+  min-height: 80px;
+}
+
+.radio-group, .checkbox-grid{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.radio-group label, .checkbox-grid label{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.checkbox-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.permit-group{
+  margin-bottom: 12px;
+  padding: 12px;
+  background: rgba(255,255,255,.03);
+  border-radius: 6px;
+  border-left: 3px solid var(--bg-2);
+}
+
+.permit-group label{
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.conditional{
+  display: none;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(25, 201, 159, .05);
+  border-radius: 6px;
+  border: 1px solid rgba(25, 201, 159, .2);
+}
+
+.conditional.show{
+  display: block;
+}
+
+.modal-field small{
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Enhanced modal responsiveness */
+@media (max-width: 720px){
+  .modal-body{ grid-template-columns:1fr; gap:12px; }
+  .radio-group, .checkbox-grid{ grid-template-columns: 1fr; }
+  .form-section{ padding: 12px; }
+  .permit-group{ padding: 8px; }
+}
+
+/* Form validation styles */
+.form-input:invalid, .form-textarea:invalid{
+  border-color: #ef4444;
+}
+
+.form-input:valid, .form-textarea:valid{
+  border-color: #10b981;
+}
+
+/* Loading state for submit */
+.btn:disabled{
+  opacity: .6;
+  cursor: not-allowed;
+}

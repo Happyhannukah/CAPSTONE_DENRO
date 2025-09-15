@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-04kwch#+99uw!*%&t4*_z_&)36z(acf6dspn%d1jfv!w9p7fq@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1', '172.16.44.90']
 
 
 # Application definition
@@ -157,6 +157,7 @@ CSRF_FAILURE_VIEW = 'DENRO.views.csrf_failure'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://172.16.44.90:8000",
     # Add your app's origin if different
 ]
 

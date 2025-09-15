@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 import json
 import logging
 import random
+import uuid
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.mail import send_mail
@@ -1150,6 +1151,203 @@ def cenro_reports(request):
 @login_required
 def cenro_templates(request):
     return render(request, "CENRO/CENRO_templates.html")
+
+
+@login_required
+def cenro_submit_report(request):
+    if request.method == 'POST':
+        # Extract data
+        report_date = request.POST.get('report_date')
+        pa_name = request.POST.get('protected_area')
+        proponent_name = request.POST.get('proponent_name')
+        contact_no = request.POST.get('contact_number')
+        location = request.POST.get('location')
+        lot_status = request.POST.get('lot_status')
+        land_classification = request.POST.get('land_classification')
+        title_no = request.POST.get('title_no')
+        lot_no = request.POST.get('lot_no')
+        lot_owner = request.POST.get('lot_owner')
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
+        area_covered = request.POST.get('area')
+        pa_zone = request.POST.get('management_zone')
+        easement = request.POST.get('easement') == 'Yes'
+        establishment_status = request.POST.get('establishment_status')
+        establishment_types = request.POST.getlist('establishment_type')
+        other_establishment = request.POST.get('establishment_others')
+        establishment_description = request.POST.get('description')
+        # Permits LGU
+        mayors_permit = request.POST.get('mayors_permit') == 'on'
+        mp_number = request.POST.get('mayors_permit_number')
+        mp_date_issued = request.POST.get('mayors_permit_issued')
+        mp_expiration = request.POST.get('mayors_permit_expiry')
+        business_permit = request.POST.get('business_permit') == 'on'
+        bp_number = request.POST.get('business_permit_number')
+        bp_date_issued = request.POST.get('business_permit_issued')
+        bp_expiration = request.POST.get('business_permit_expiry')
+        building_permit = request.POST.get('building_permit') == 'on'
+        bldg_number = request.POST.get('building_permit_number')
+        bldg_date_issued = request.POST.get('building_permit_issued')
+        bldg_expiration = request.POST.get('building_permit_expiry')
+        # Permits DENR EMB
+        pamb = request.POST.get('pamb') == 'on'
+        pamb_no = request.POST.get('pamb_number')
+        pamb_di = request.POST.get('pamb_issued')
+        sapa = request.POST.get('sapa') == 'on'
+        sapa_no = request.POST.get('sapa_number')
+        sapa_di = request.POST.get('sapa_issued')
+        pacbrma = request.POST.get('pacbrma') == 'on'
+        pacbrma_no = request.POST.get('pacbrma_number')
+        pacbrma_di = request.POST.get('pacbrma_issued')
+        ecc = request.POST.get('ecc') == 'on'
+        ecc_no = request.POST.get('ecc_number')
+        ecc_di = request.POST.get('ecc_issued')
+        discharge_permit = request.POST.get('discharge_permit') == 'on'
+        dp_no = request.POST.get('discharge_permit_number')
+        dp_di = request.POST.get('discharge_permit_issued')
+        permit_operate = request.POST.get('permit_operate') == 'on'
+        pto_no = request.POST.get('operate_permit_number')
+        pto_di = request.POST.get('operate_permit_issued')
+        emb_rp = request.POST.get('other_emb')
+        # Photos
+        photos = request.FILES.getlist('photos')
+        # Signatures
+        enumerator_signature = request.POST.get('enumerator_signature')
+        enumerator_date = request.POST.get('enumerator_date')
+        informant_signature = request.POST.get('informant_signature')
+        informant_date = request.POST.get('informant_date')
+        informant_reason = request.POST.get('refusal_reason')
+        pa_coordinator_signature = request.POST.get('pa_coordinator_signature')
+        apas_signature = request.POST.get('apas_signature')
+
+        # Create ProtectedArea
+        pa, created = ProtectedArea.objects.get_or_create(name=pa_name)
+
+        # Create LeasedPropertyProfile
+        profile = LeasedPropertyProfile.objects.create(
+            report_date=report_date,
+            proponent_name=proponent_name,
+            contact_no=contact_no,
+            location=location,
+            lot_status=lot_status,
+            land_classification_status=land_classification,
+            title_no=title_no,
+            lot_no=lot_no,
+            lot_owner=lot_owner,
+            latitude=latitude,
+            longitude=longitude,
+            area_covered=area_covered,
+            pa_management_zone=pa_zone,
+            establishment_status=establishment_status,
+            easement=easement,
+        )
+
+        # Create TypeOfEstablishment
+        types_str = ', '.join(establishment_types)
+        if other_establishment:
+            types_str += ', ' + other_establishment
+        establishment = TypeOfEstablishment.objects.create(
+            name=types_str,
+            description=establishment_description,
+        )
+
+        # Create PermitsLGU
+        lgu_permit = PermitsLGU.objects.create(
+            mayors_permit=mayors_permit,
+            mp_number=mp_number,
+            mpdi=mp_date_issued,
+            mped=mp_expiration,
+            business_permit=business_permit,
+            bp_number=bp_number,
+            bpdi=bp_date_issued,
+            bped=bp_expiration,
+            building_permit=building_permit,
+            bldg_number=bldg_number,
+            bldgdi=bldg_date_issued,
+            bldged=bldg_expiration,
+        )
+
+        # Create PermitsDENREMB
+        denr_emb = PermitsDENREMB.objects.create(
+            pamb_resolution=pamb,
+            pamb_resolution_no=pamb_no,
+            pamb_di=pamb_di,
+            sapa=sapa,
+            sapa_no=sapa_no,
+            sapa_di=sapa_di,
+            pacbrma=pacbrma,
+            pacbrma_no=pacbrma_no,
+            pacbrma_di=pacbrma_di,
+            ecc=ecc,
+            ecc_no=ecc_no,
+            ecc_di=ecc_di,
+            discharge_permit=discharge_permit,
+            dp_no=dp_no,
+            dp_di=dp_di,
+            permit_to_operate=permit_operate,
+            pto_no=pto_no,
+            pto_di=pto_di,
+            emb_rp=emb_rp,
+        )
+
+        # Create AttestationNotation
+        attestation = AttestationNotation.objects.create(
+            attested_by_name=pa_coordinator_signature,
+            attested_by_position="PA Coordinator",
+            noted_by_name=apas_signature,
+            noted_by_position="APAS",
+        )
+
+        # Handle photos
+        geo_images = []
+        for photo in photos:
+            import uuid
+            qr_code = str(uuid.uuid4())
+            geo_image = GeoTaggedImage.objects.create(
+                image=photo,
+                qr_code=qr_code,
+                latitude=latitude,
+                longitude=longitude,
+                location=location,
+                captured_by=request.user,
+            )
+            geo_images.append(geo_image)
+
+        # Create EnumeratorsReport
+        report = EnumeratorsReport.objects.create(
+            report_date=report_date,
+            pa=pa,
+            profile=profile,
+            establishment=establishment,
+            lgu_permit=lgu_permit,
+            denr_emb=denr_emb,
+            attestation=attestation,
+            enumerator=request.user,
+            informant=None,  # Assuming no informant user
+            geo_tag_image=geo_images[0] if geo_images else None,
+            status='PENDING',
+        )
+
+        # Create notifications for CENRO users
+        cenro_users = User.objects.filter(role='CENRO', is_approved=True, is_deactivated=False)
+        for cenro in cenro_users:
+            Notification.objects.create(
+                user=cenro,
+                message=f"New enumerator report submitted by {request.user.username} and is pending approval.",
+            )
+
+        # Activity log
+        ActivityLog.objects.create(
+            user=request.user,
+            action="REPORT_CENRO",
+            details=f"Submitted enumerator report {report.id}",
+            ip_address=request.META.get("REMOTE_ADDR"),
+        )
+
+        messages.success(request, "Report submitted successfully and is pending approval by CENRO.")
+        return redirect('CENRO_templates')
+
+    return redirect('CENRO_templates')
 
 
 # ----------------- PENRO Create Account -----------------

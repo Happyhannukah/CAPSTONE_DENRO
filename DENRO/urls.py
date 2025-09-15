@@ -28,6 +28,7 @@ urlpatterns = [
     path("cenro/activitylogs/", views.cenro_activitylogs, name="CENRO_activitylogs"),
     path("cenro/reports/", views.cenro_reports, name="CENRO_reports"),
     path("cenro/templates/", views.cenro_templates, name="CENRO_templates"),
+    path("cenro/submit-report/", views.cenro_submit_report, name="cenro_submit_report"),
     # Admin Approvals
     path("custom-admin/approve-users/", views.approve_users, name="approve_users"),
     path("custom-admin/reports/", views.admin_reports, name="admin_reports"),

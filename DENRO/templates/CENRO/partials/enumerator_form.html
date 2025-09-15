@@ -1,25 +1,474 @@
-<div class="modal" id="enumeratorModal" aria-hidden="true" role="dialog" aria-labelledby="enumeratorModalTitle">
-  <div class="modal-content" role="document">
+{% load static %}
+<!-- Button to open modal -->
+<button id="openModalBtn" class="btn eco-btn">Open Enumerator Report Form</button>
+
+<!-- Modal -->
+<div class="modal" id="enumeratorModal" aria-hidden="true" role="dialog" aria-labelledby="enumeratorModalTitle" style="display:none;">
+  <div class="modal-content" role="document" tabindex="0" aria-modal="true" aria-describedby="stepIndicator">
     <div class="modal-header">
-      <h2 class="modal-title" id="enumeratorModalTitle">Enumerators Form</h2>
-      <button class="modal-close" id="closeModalBtn" aria-label="Close">×</button>
+      <h2 class="modal-title" id="enumeratorModalTitle">Enumerators Report Form</h2>
+      <button class="modal-close" id="closeModalBtn" aria-label="Close modal">×</button>
     </div>
+    <div class="step-indicator" id="stepIndicator">Step 1 of 3</div>
 
-    <div class="modal-body">
-      <div class="modal-field"><label>Date</label><div class="value">—</div></div>
-      <div class="modal-field"><label>Name of Protected Area</label><div class="value">—</div></div>
-      <div class="modal-field"><label>Location</label><div class="value">—</div></div>
-      <div class="modal-field"><label>Coordinates</label><div class="value">—</div></div>
-      <div class="modal-field"><label>Contact Person</label><div class="value">—</div></div>
-      <div class="modal-field"><label>Designation</label><div class="value">—</div></div>
-      <div class="modal-field"><label>Ownership</label><div class="value">—</div></div>
-      <div class="modal-field"><label>Area (m²)</label><div class="value">—</div></div>
-      <div class="modal-field"><label>Type of Establishment</label><div class="value">—</div></div>
-      <div class="modal-field"><label>Status</label><div class="value">—</div></div>
-    </div>
+    <form enctype="multipart/form-data" method="post" action="{% url 'cenro_submit_report' %}" id="enumeratorForm">
+      {% csrf_token %}
+      <div class="modal-body">
+        <!-- Step 1 -->
+        <div class="step active" id="step1">
+          <h3>Basic Information</h3>
+          <div class="form-group">
+            <label for="report_date">Date</label>
+            <input type="date" id="report_date" name="report_date" required>
+          </div>
+          <div class="form-group">
+            <label for="protected_area">Name of Protected Area</label>
+            <input type="text" id="protected_area" name="protected_area" required>
+          </div>
+          <div class="form-group">
+            <label for="proponent_name">Name of Proponent/Owner (Company/Office)</label>
+            <input type="text" id="proponent_name" name="proponent_name" required>
+          </div>
+          <div class="form-group">
+            <label for="contact_number">Contact Number</label>
+            <input type="text" id="contact_number" name="contact_number">
+          </div>
+          <div class="form-group">
+            <label for="location">Location (Sitio, Brgy, Municipality, Province)</label>
+            <input type="text" id="location" name="location" required>
+          </div>
+          <div class="form-group">
+            <label>Lot Status</label>
+            <select name="lot_status" id="lot_status">
+              <option value="Titled">Titled</option>
+              <option value="Untitled">Untitled</option>
+              <option value="Tax Declaration">Tax Declaration</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Land Classification Status</label>
+            <select name="land_classification">
+              <option value="Timberland">Timberland</option>
+              <option value="A & D">A & D</option>
+            </select>
+          </div>
+          <div class="form-group" id="title_details" style="display:none;">
+            <label for="title_details_input">Title Details (Title #, Lot # & Lot Owner)</label>
+            <input type="text" id="title_details_input" name="title_details">
+          </div>
+          <div class="form-group">
+            <label for="area_covered">Area Covered (in hectares)</label>
+            <input type="number" id="area_covered" name="area_covered" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="longitude">Longitude</label>
+            <input type="text" id="longitude" name="longitude" required>
+          </div>
+          <div class="form-group">
+            <label for="latitude">Latitude</label>
+            <input type="text" id="latitude" name="latitude" required>
+          </div>
 
-    <div class="modal-footer">
-      <button class="btn btn--ghost" id="closeModalBtn2">Close</button>
-    </div>
+          <div class="form-section">
+            <h3>Establishment Details</h3>
+            <div class="form-group">
+              <label>Type of Establishment</label>
+              <div class="checkbox-group">
+                <label><input type="checkbox" name="establishment_types" value="Commercial"> Commercial</label>
+                <label><input type="checkbox" name="establishment_types" value="Residential"> Residential</label>
+                <label><input type="checkbox" name="establishment_types" value="Industrial"> Industrial</label>
+                <label><input type="checkbox" name="establishment_types" value="Agricultural"> Agricultural</label>
+                <label><input type="checkbox" name="establishment_types" value="Institutional"> Institutional</label>
+                <input type="text" name="other_establishment" placeholder="Others (specify)" class="form-input" style="margin-top:10px;">
+                <label>Description *</label>
+                <textarea name="establishment_description" required class="form-textarea" minlength="10"></textarea>
+              </div>
+            </div>
+          </div>
+        </div> <!-- end step1 -->
+
+        <!-- Step 2 -->
+        <div class="step" id="step2">
+          <div class="form-section">
+            <h3 class="section-title">Permits</h3>
+            <div class="form-group">
+              <label for="denr_permit">DENR Permits</label>
+              <input type="text" id="denr_permit" name="denr_permit" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="lgus_permit">LGUs Permits</label>
+              <input type="text" id="lgus_permit" name="lgus_permit" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="emb_permit">EMB Permits</label>
+              <input type="text" id="emb_permit" name="emb_permit" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="other_permits">Other Permits</label>
+              <input type="text" id="other_permits" name="other_permits" class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="emb_rp">EMB RP</label>
+              <input type="text" name="emb_rp" placeholder="Other EMB permits" class="form-input">
+            </div>
+          </div>
+        </div> <!-- end step2 -->
+
+        <!-- Step 3 -->
+        <div class="step" id="step3">
+          <div class="form-section">
+            <h3 class="section-title">Documentation</h3>
+            <div class="form-group">
+              <label for="photos">Geotagged Photos *</label>
+              <input type="file" id="photos" name="photos" accept="image/*" multiple required>
+            </div>
+            <div class="form-group">
+              <label for="documents">Documents</label>
+              <input type="file" id="documents" name="documents" accept=".pdf,.doc,.docx" multiple>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-title">Signatures</h3>
+            <div class="modal-field">
+              <label for="enumerator_signature">Enumerator Name & Signature</label>
+              <input type="text" id="enumerator_signature" name="enumerator_signature" class="form-input">
+            </div>
+            <div class="modal-field">
+              <label for="pa_coordinator_signature">PA Coordinator Name & Signature</label>
+              <input type="text" id="pa_coordinator_signature" name="pa_coordinator_signature" class="form-input">
+            </div>
+            <div class="modal-field">
+              <label for="apas_signature">APAS Name & Signature</label>
+              <input type="text" id="apas_signature" name="apas_signature" class="form-input">
+            </div>
+          </div>
+        </div> <!-- end step3 -->
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn--ghost" id="prevBtn" style="display:none;">Previous</button>
+        <button type="button" class="btn" id="nextBtn">Next</button>
+        <button type="submit" class="btn" id="submitBtn" style="display:none;">Submit Report</button>
+        <button type="button" class="btn btn--ghost" id="closeModalBtn2">Close</button>
+      </div>
+    </form>
   </div>
 </div>
+
+<style>
+  /* Basic Reset & Fonts */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #eef6f1;
+    color: #2c3e21;
+  }
+
+  /* Button */
+  .btn {
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 6px 15px rgb(40 167 69 / 0.2);
+  }
+
+  .btn.eco-btn {
+    background: #4caf50; /* lush green */
+    color: white;
+    box-shadow: 0 8px 20px rgb(46 125 50 / 0.4);
+  }
+  .btn.eco-btn:hover {
+    background: #388e3c;
+    box-shadow: 0 10px 25px rgb(33 97 37 / 0.6);
+  }
+
+  .btn--ghost {
+    background: transparent;
+    color: #4caf50;
+    border: 2px solid #4caf50;
+  }
+  .btn--ghost:hover {
+    background: #4caf50;
+    color: white;
+  }
+
+  /* Modal Overlay */
+  .modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(34, 49, 24, 0.75); /* dark translucent forest green */
+    display: none; /* hidden by default */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(6px);
+  }
+
+  /* Modal Container */
+  .modal-content {
+    background: #f7faf6; /* very light leaf green */
+    padding: 25px 30px;
+    max-width: 720px;
+    width: 95%;
+    border-radius: 16px;
+    box-shadow: 0 12px 35px rgb(40 167 69 / 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 2px solid #4caf50;
+    position: relative;
+    transition: transform 0.4s ease;
+  }
+  .modal-content:focus {
+    outline: 3px solid #81c784;
+  }
+
+  /* Modal Header */
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #a5d6a7;
+    margin-bottom: 18px;
+  }
+  .modal-title {
+    font-size: 1.7rem;
+    color: #2e7d32;
+    font-weight: 700;
+  }
+  .modal-close {
+    font-size: 1.6rem;
+    background: transparent;
+    border: none;
+    color: #4caf50;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+  .modal-close:hover {
+    color: #81c784;
+  }
+
+  /* Step Indicator */
+  .step-indicator {
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #388e3c;
+    font-family: 'Georgia', serif;
+  }
+
+  /* Steps */
+  .step {
+    display: none;
+    animation: fadeInStep 0.4s ease forwards;
+  }
+  .step.active {
+    display: block;
+  }
+  @keyframes fadeInStep {
+    from {opacity: 0; transform: translateY(8px);}
+    to {opacity: 1; transform: translateY(0);}
+  }
+
+  /* Form Styling */
+  .form-group {
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+    color: #33691e;
+    font-size: 0.95rem;
+  }
+  input[type="text"],
+  input[type="date"],
+  input[type="number"],
+  input[type="file"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1.8px solid #a5d6a7;
+    font-size: 1rem;
+    background: #f1f8e9;
+    color: #2e7d32;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    resize: vertical;
+  }
+  input[type="text"]:focus,
+  input[type="date"]:focus,
+  input[type="number"]:focus,
+  input[type="file"]:focus,
+  select:focus,
+  textarea:focus {
+    border-color: #81c784;
+    box-shadow: 0 0 8px #a5d6a7;
+    outline: none;
+  }
+  textarea {
+    min-height: 80px;
+    font-family: inherit;
+  }
+
+  /* Checkbox group */
+  .checkbox-group label {
+    font-weight: 500;
+    margin-right: 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    color: #33691e;
+  }
+  .checkbox-group input[type="checkbox"] {
+    margin-right: 6px;
+    accent-color: #4caf50;
+  }
+
+  /* Modal Footer */
+  .modal-footer {
+    margin-top: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .modal-footer .btn {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  /* Scrollbar */
+  .modal-content::-webkit-scrollbar {
+    width: 9px;
+  }
+  .modal-content::-webkit-scrollbar-track {
+    background: #e8f5e9;
+    border-radius: 8px;
+  }
+  .modal-content::-webkit-scrollbar-thumb {
+    background: #66bb6a;
+    border-radius: 8px;
+  }
+
+  /* Responsive */
+  @media (max-width: 650px) {
+    .modal-content {
+      padding: 20px 15px;
+      width: 100%;
+      max-width: 100%;
+      border-radius: 0;
+      max-height: 100vh;
+    }
+    .modal-footer {
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-footer .btn {
+      flex: none;
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('enumeratorModal');
+  const openBtn = document.getElementById('openModalBtn');
+  const closeBtns = document.querySelectorAll('#closeModalBtn, #closeModalBtn2');
+
+  openBtn.addEventListener('click', () => {
+    modal.style.display = 'flex';
+    // Focus modal content for accessibility
+    modal.querySelector('.modal-content').focus();
+  });
+
+  closeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+
+  // Steps
+  let currentStep = 1;
+  const totalSteps = 3;
+  const stepIndicator = document.getElementById('stepIndicator');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function showStep(step) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + step).classList.add('active');
+    stepIndicator.textContent = 'Step ' + step + ' of ' + totalSteps;
+    prevBtn.style.display = step === 1 ? 'none' : 'inline-block';
+    nextBtn.style.display = step === totalSteps ? 'none' : 'inline-block';
+    submitBtn.style.display = step === totalSteps ? 'inline-block' : 'none';
+  }
+
+  nextBtn.addEventListener('click', () => {
+    if (currentStep < totalSteps) {
+      currentStep++;
+      showStep(currentStep);
+    }
+  });
+
+  prevBtn.addEventListener('click', () => {
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+    }
+  });
+
+  showStep(currentStep);
+
+  // Title Details toggle
+  const lotStatusSelect = document.getElementById('lot_status');
+  const titleDetailsDiv = document.getElementById('title_details');
+
+  function toggleTitleDetails() {
+    if (lotStatusSelect.value === 'Titled') {
+      titleDetailsDiv.style.display = 'block';
+    } else {
+      titleDetailsDiv.style.display = 'none';
+    }
+  }
+  lotStatusSelect.addEventListener('change', toggleTitleDetails);
+  toggleTitleDetails();
+
+  // Form validation on submit
+  const form = document.getElementById('enumeratorForm');
+
+  form.addEventListener('submit', function(e) {
+    const establishmentTypes = form.querySelectorAll('input[name="establishment_types"]:checked');
+    if (establishmentTypes.length === 0) {
+      e.preventDefault();
+      alert('Please select at least one type of establishment.');
+      return;
+    }
+
+    const photos = form.querySelector('input[name="photos"]').files;
+    if (photos.length === 0) {
+      e.preventDefault();
+      alert('Please upload at least one geotagged photo.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+  });
+});
+</script>
